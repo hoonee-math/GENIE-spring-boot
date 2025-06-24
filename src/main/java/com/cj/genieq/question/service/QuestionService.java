@@ -1,0 +1,13 @@
+package com.cj.genieq.question.service;
+
+import com.cj.genieq.passage.entity.PassageEntity;
+import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
+import com.cj.genieq.question.dto.request.QuestionUpdateRequestDto;
+import com.cj.genieq.question.dto.response.QuestionSelectResponseDto;
+
+import java.util.List;
+
+public interface QuestionService {
+    List<QuestionSelectResponseDto> saveQuestions(PassageEntity savedPassage, List<QuestionInsertRequestDto> questions);
+    List<QuestionSelectResponseDto> updateQuestions(PassageEntity passage, List<QuestionUpdateRequestDto> questions);
+}
