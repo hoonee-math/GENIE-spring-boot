@@ -9,6 +9,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * ⚠️ DEPRECATED: 이 클래스는 더 이상 사용되지 않습니다.
+ * 
+ * JWT 기반 인증 시스템으로 전환됨에 따라 세션 기반 AuthInterceptor는 사용 중단되었습니다.
+ * 인증은 이제 Spring Security의 JwtAuthenticationFilter에서 처리됩니다.
+ * 
+ * @deprecated JWT 기반 인증 시스템으로 대체됨
+ * @see com.cj.genieq.common.filter.JwtAuthenticationFilter
+ */
+@Deprecated
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
@@ -16,32 +26,11 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 로그: 인증 인터셉터 실행
-        logger.info("AuthInterceptor 실행 - 요청 경로: {}", request.getRequestURI());
-
-        // OPTIONS 요청은 CORS preflight 요청이므로 통과
-        if (request.getMethod().equals("OPTIONS")) {
-            logger.info("OPTIONS 요청 통과");
-            return true;
-        }
-
-        // 세션 확인
-        HttpSession session = request.getSession(false);
-
-        // 세션이 없거나 로그인 정보가 없는 경우
-        if (session == null || session.getAttribute("LOGIN_USER") == null) {
-            logger.warn("인증 실패 - 세션 없음 또는 로그인 정보 없음");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"error\":\"인증이 필요합니다.\",\"status\":401}");
-            return false;
-        }
-
-        // 로그인 상태 확인
-        LoginMemberResponseDto loginUser = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
-        logger.info("인증 성공 - 사용자: {}", loginUser.getEmail());
-
+        // ⚠️ 이 메서드는 더 이상 사용되지 않습니다.
+        // JWT 인증은 JwtAuthenticationFilter에서 자동으로 처리됩니다.
+        logger.warn("AuthInterceptor는 deprecated입니다. JWT 기반 인증을 사용하세요.");
+        
+        // 모든 요청을 통과시킴 (Spring Security에서 JWT 인증 처리)
         return true;
     }
 }

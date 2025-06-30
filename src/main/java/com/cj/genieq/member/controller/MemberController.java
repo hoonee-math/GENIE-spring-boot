@@ -46,10 +46,25 @@ public class MemberController {
 
     }
 
+    /**
+     * JWT 기반 로그인 API
+     * 기존 세션 방식에서 JWT 토큰 방식으로 전환
+     * 성공 시 JWT 토큰을 포함한 사용자 정보 반환
+     */
     @PostMapping("/auth/select/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDto loinRequestDto, HttpSession session){
-        LoginMemberResponseDto loginuser = authService.login(loinRequestDto.getMemEmail(), loinRequestDto.getMemPassword(), session);
-        return ResponseEntity.ok().body(loginuser);
+    public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequestDto) {
+        try {
+            LoginMemberResponseDto loginResponse = authService.login(
+                loginRequestDto.getMemEmail(), 
+                loginRequestDto.getMemPassword()
+            );
+            return ResponseEntity.ok().body(loginResponse);
+        } catch (IllegalArgumentException e) {
+            // 로그인 실패 시 명확한 에러 메시지 반환
+            return ResponseEntity.status(401).body(
+                Map.of("error", e.getMessage(), "status", 401)
+            );
+        }
     }
 
     @PutMapping("/auth/remove/withdrawal")

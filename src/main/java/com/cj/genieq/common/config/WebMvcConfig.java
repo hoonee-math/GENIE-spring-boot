@@ -1,42 +1,21 @@
 package com.cj.genieq.common.config;
 
-import com.cj.genieq.common.interceptor.AuthInterceptor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Spring MVC 설정
+ * 
+ * 이전에 포함되었던 CORS 설정과 AuthInterceptor는 제거되었습니다:
+ * - CORS 설정: SecurityConfig로 통합 이관됨
+ * - AuthInterceptor: JWT 기반 인증으로 대체됨 (JwtAuthenticationFilter 사용)
+ * 
+ * 현재는 기본 MVC 설정만 유지하며, 필요시 추가 설정을 여기에 구현할 수 있습니다.
+ */
 @Configuration
-@RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
-    // REST API 백엔드 구현을 위한 중요한 설정 파일
-    // CORS 설정, 컨트롤러 요청 매핑 및 변환 설정, 인터셉터 등록
-
-    private final AuthInterceptor authInterceptor;
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins( "http://localhost:5173","http://localhost:5174","http://localhost:80","http://localhost","http://localhost:443","https://chunjae-it-edu.com")// Vue 프로젝트의 개발 서버 주소
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "OPTIONS")
-                .allowedHeaders("*")
-                .exposedHeaders("Content-Disposition") // 파일 이름 추출 허용
-                .allowCredentials(true);
-    }
-
-    public WebMvcConfig() {
-        // 직접 인스턴스 생성하여 할당
-        this.authInterceptor = new AuthInterceptor();
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authInterceptor)
-                .addPathPatterns("/api/**", "/tick/**", "/paym/**", "/subj/**", "/pass/**",
-                        "/favo/**", "/form/**", "/ques/**", "/noti/**") // 인증이 필요한 경로
-                .excludePathPatterns("/api/auth/select/login", "/api/auth/insert/signup",
-                        "/api/auth/select/email", "/api/auth/update/temporal",
-                        "/swagger-ui/**", "/v3/api-docs/**", "/api/test/**"); // 인증이 필요 없는 경로
-    }
+    
+    // 🎯 현재는 기본 설정만 사용
+    // 향후 필요한 MVC 관련 설정(예: 메시지 컨버터, 뷰 리졸버 등)은 여기에 추가
+    
 }
