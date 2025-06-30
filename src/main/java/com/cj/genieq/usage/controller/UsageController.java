@@ -1,12 +1,11 @@
 package com.cj.genieq.usage.controller;
 
-import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
+import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.usage.dto.response.UsageListResponseDto;
 import com.cj.genieq.usage.service.UsageService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -23,14 +22,9 @@ public class UsageController {
     public ResponseEntity<?> selectList(
             @RequestParam("startDate")LocalDate startDate,
             @RequestParam("endDate") LocalDate endDate,
-            HttpSession session){
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+            @AuthenticationPrincipal MemberEntity member){
 
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        List<UsageListResponseDto> usages = usageService.getUsageList(loginMember.getMemberCode(), startDate, endDate);
+        List<UsageListResponseDto> usages = usageService.getUsageList(member.getMemCode(), startDate, endDate);
         return ResponseEntity.ok(usages);
     }
     

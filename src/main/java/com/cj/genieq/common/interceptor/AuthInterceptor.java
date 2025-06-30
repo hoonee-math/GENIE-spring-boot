@@ -1,9 +1,7 @@
 package com.cj.genieq.common.interceptor;
 
-import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

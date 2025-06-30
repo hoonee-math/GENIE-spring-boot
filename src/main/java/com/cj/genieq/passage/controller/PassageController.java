@@ -1,6 +1,6 @@
 package com.cj.genieq.passage.controller;
 
-import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
+import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.passage.dto.request.*;
 import com.cj.genieq.passage.dto.response.*;
 import com.cj.genieq.passage.service.PassageService;
@@ -8,11 +8,11 @@ import com.cj.genieq.passage.service.PdfService;
 import com.cj.genieq.passage.service.TxtService;
 import com.cj.genieq.passage.service.WordService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.dao.DataAccessException;
 
@@ -30,17 +30,21 @@ public class PassageController {
     private final WordService wordService;
     private final TxtService txtService;
 
+    /**
+     * 지문 개별 저장 API (JWT 기반)
+     * 기존 세션 방식에서 JWT 토큰 기반 인증으로 전환
+     * @param member JWT로 인증된 사용자 정보 (자동 주입)
+     * @param passageDto 지문 생성 요청 데이터
+     * @return 생성된 지문 정보 또는 에러 메시지
+     */
     @PostMapping("/insert/each")
-    public ResponseEntity<?> insertEach(HttpSession session, @RequestBody PassageInsertRequestDto passageDto) {
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+    public ResponseEntity<?> insertEach(
+            @AuthenticationPrincipal MemberEntity member, // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
+            @RequestBody PassageInsertRequestDto passageDto) {
 
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        // 지문 생성
-        PassageSelectResponseDto savedPassage = passageService.savePassage(loginMember.getMemberCode(), passageDto);
-
+        // 지문 생성 (기존 비즈니스 로직 유지)
+        PassageSelectResponseDto savedPassage = passageService.savePassage(member.getMemCode(), passageDto);
+    
         if (savedPassage != null) {
             return ResponseEntity.ok(savedPassage);
         } else {
@@ -61,15 +65,10 @@ public class PassageController {
     }
 
     @GetMapping("/select/prevlist")
-    public ResponseEntity<?> selectPrevList(HttpSession session) {
+    public ResponseEntity<?> selectPrevList(@AuthenticationPrincipal MemberEntity member) {
         try {
-            LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
 
-            if (loginMember == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-            }
-
-            List<PassagePreviewListDto> previews = passageService.getPreviewList(loginMember.getMemberCode());
+            List<PassagePreviewListDto> previews = passageService.getPreviewList(member.getMemCode());
 
             // 지문 목록이 비어있는 경우 처리 (optional)
             if (previews.isEmpty()) {
@@ -120,16 +119,9 @@ public class PassageController {
 
     // 지문 + 문항 저장
     @PostMapping("/ques/insert/each")
-    public ResponseEntity<?> savePassage(HttpSession session, @RequestBody PassageWithQuestionsRequestDto requestDto) {
-        // 세션에서 로그인 사용자 정보를 가져옴
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+    public ResponseEntity<?> savePassage(@AuthenticationPrincipal MemberEntity member, @RequestBody PassageWithQuestionsRequestDto requestDto) {
 
-        // 로그인 상태 확인
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        PassageWithQuestionsResponseDto responseDto = passageService.savePassageWithQuestions(loginMember.getMemberCode(), requestDto);
+        PassageWithQuestionsResponseDto responseDto = passageService.savePassageWithQuestions(member.getMemCode(), requestDto);
 
         return ResponseEntity.ok(responseDto);
     }
@@ -143,30 +135,23 @@ public class PassageController {
 
     // 지문 + 문항 수정
     @PutMapping("/ques/update/{pasCode}")
-    public ResponseEntity<PassageWithQuestionsResponseDto> updatePassage(HttpSession session,
+    public ResponseEntity<PassageWithQuestionsResponseDto> updatePassage(
+            @AuthenticationPrincipal MemberEntity member,
             @PathVariable Long pasCode,
             @RequestBody PassageWithQuestionsRequestDto requestDto) {
-        // 세션에서 로그인 사용자 정보를 가져옴
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
 
-        PassageWithQuestionsResponseDto updatedPassage = passageService.updatePassage(loginMember.getMemberCode(), pasCode, requestDto);
+        PassageWithQuestionsResponseDto updatedPassage = passageService.updatePassage(member.getMemCode(), pasCode, requestDto);
         return ResponseEntity.ok(updatedPassage);
 
     }
 
     // 자료실 메인화면 리스트(즐겨찾기+최근 작업)
     @GetMapping("/select/list")
-    public ResponseEntity<?> selectList(HttpSession session) {
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
-
-        // 로그인 상태 확인
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
+    public ResponseEntity<?> selectList(@AuthenticationPrincipal MemberEntity member) {
 
         try {
-            List<PassageStorageEachResponseDto> favorites = passageService.selectPassageListInStorage(loginMember.getMemberCode(), 1, 5);
-            List<PassageStorageEachResponseDto> recent = passageService.selectPassageListInStorage(loginMember.getMemberCode(), 0, 8);
+            List<PassageStorageEachResponseDto> favorites = passageService.selectPassageListInStorage(member.getMemCode(), 1, 5);
+            List<PassageStorageEachResponseDto> recent = passageService.selectPassageListInStorage(member.getMemCode(), 0, 8);
 
             PassageStorageMainResponseDto responseDto = PassageStorageMainResponseDto.builder()
                     .favorites(favorites)
@@ -188,59 +173,35 @@ public class PassageController {
 
     // 즐겨찾기 리스트
     @GetMapping("/select/favolist")
-    public ResponseEntity<?> selectFavoList(HttpSession session) {
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+    public ResponseEntity<?> selectFavoList(@AuthenticationPrincipal MemberEntity member) {
 
-        // 로그인 상태 확인
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        List<PassageStorageEachResponseDto> favorites = passageService.selectFavoriteList(loginMember.getMemberCode());
+        List<PassageStorageEachResponseDto> favorites = passageService.selectFavoriteList(member.getMemCode());
 
         return ResponseEntity.ok(favorites);
     }
 
     // 최근 작업 내역 리스트
     @GetMapping("/select/recelist")
-    public ResponseEntity<?> selectRecent(HttpSession session) {
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+    public ResponseEntity<?> selectRecent(@AuthenticationPrincipal MemberEntity member) {
 
-        // 로그인 상태 확인
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        List<PassageStorageEachResponseDto> recents = passageService.selectRecentList(loginMember.getMemberCode());
+        List<PassageStorageEachResponseDto> recents = passageService.selectRecentList(member.getMemCode());
 
         return ResponseEntity.ok(recents);
     }
 
     // 휴지통 리스트
     @GetMapping("/select/deletedList")
-    public ResponseEntity<?> selectDeletedList(HttpSession session) {
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+    public ResponseEntity<?> selectDeletedList(@AuthenticationPrincipal MemberEntity member) {
 
-        // 로그인 상태 확인
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        List<PassageStorageEachResponseDto> deleted = passageService.findDeletedByMember(loginMember.getMemberCode());
+        List<PassageStorageEachResponseDto> deleted = passageService.findDeletedByMember(member.getMemCode());
 
         return ResponseEntity.ok(deleted);
     }
 
     @GetMapping("/select/count/recent")
-    public ResponseEntity<?> countRecentChange(HttpSession session){
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+    public ResponseEntity<?> countRecentChange(@AuthenticationPrincipal MemberEntity member){
 
-        // 로그인 상태 확인
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        int numberOfRecentChange = passageService.countRecentChange(loginMember.getMemberCode());
+        int numberOfRecentChange = passageService.countRecentChange(member.getMemCode());
 
         return ResponseEntity.ok(numberOfRecentChange);
     }

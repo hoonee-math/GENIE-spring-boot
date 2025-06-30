@@ -1,6 +1,7 @@
 package com.cj.genieq.tosspay.controller;
 
 import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
+import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.payment.service.PaymentService;
 import com.cj.genieq.tosspay.dto.request.ConfirmPaymentRequestDto;
 import com.cj.genieq.tosspay.dto.request.TossPayRequestDto;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +90,7 @@ public class TossPayController {
     @PostMapping("/confirm")
     public ResponseEntity<String> confirm(
             HttpSession session,
+            @AuthenticationPrincipal MemberEntity member,
             @RequestBody ConfirmPaymentRequestDto dto
     ) throws Exception {
         try {
@@ -114,11 +117,7 @@ public class TossPayController {
             int totalAmount = json.get("totalAmount").asInt();
 
             // 3) 로그인 회원 검증
-            LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
-
-            if (loginMember == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-            }
+            // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
 
             // 4) 세션에서 ticCode 꺼내고 즉시 제거
             String orderId = dto.getOrderId();
@@ -127,7 +126,7 @@ public class TossPayController {
 
             // 5) DB에 결제 내역 저장
             paymentService.insertPayment(
-                    loginMember.getMemberCode(),
+                    member.getMemCode(),
                     ticCode,
                     dto.getOrderId(),
                     dto.getPaymentKey(),
