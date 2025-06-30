@@ -3,6 +3,7 @@ package com.cj.genieq.member.controller;
 import com.cj.genieq.member.dto.request.*;
 import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
 import com.cj.genieq.member.dto.response.MemberInfoResponseDto;
+import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.member.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +45,6 @@ public class MemberController {
         authService.signUp(signUpRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body("회원가입 성공");
 
-
     }
 
     /**
@@ -67,9 +68,13 @@ public class MemberController {
         }
     }
 
+    /**
+     * 회원탈퇴 API (JWT 기반)
+     * 기존 세션 방식에서 JWT 토큰 기반 인증으로 전환
+     */
     @PutMapping("/auth/remove/withdrawal")
-    public ResponseEntity<?> withdraw(@RequestBody WithdrawRequestDto withdrawRequestDto, HttpSession session){
-        authService.withdraw(withdrawRequestDto.getMemEmail(), session);
+    public ResponseEntity<?> withdraw(@RequestBody WithdrawRequestDto withdrawRequestDto) {
+        authService.withdraw(withdrawRequestDto.getMemEmail());
         return ResponseEntity.ok("탈퇴완료");
     }
 
@@ -96,29 +101,20 @@ public class MemberController {
 
     // 회원 정보 전체 조회
     @GetMapping("/info/select/entire")
-    public ResponseEntity<?> selectEntire(HttpSession session){
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+    public ResponseEntity<?> selectEntire(@AuthenticationPrincipal MemberEntity member){ // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
 
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        } else {
-            MemberInfoResponseDto memberInfo = infoService.getMemberInfo(loginMember.getMemberCode());
+        MemberInfoResponseDto memberInfo = infoService.getMemberInfo(member.getMemCode());
 
-            return ResponseEntity.ok().body(memberInfo);
-        }
+        return ResponseEntity.ok().body(memberInfo);
+
     }
 
     // 회원의 잔여 이용권 조회
     @GetMapping("/info/select/ticket")
-    public ResponseEntity<?> selectTicket(HttpSession session){
-        LoginMemberResponseDto loginMember = (LoginMemberResponseDto) session.getAttribute("LOGIN_USER");
+    public ResponseEntity<?> selectTicket(@AuthenticationPrincipal MemberEntity member){
 
-        if (loginMember == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        int balance = infoService.getUsageBalance(loginMember.getMemberCode());
-        int total = infoService.getUsageTotal(loginMember.getMemberCode());
+        int balance = infoService.getUsageBalance(member.getMemCode());
+        int total = infoService.getUsageTotal(member.getMemCode());
 
         Map<String, Integer> response = new HashMap<>();
         response.put("balance", balance);
@@ -128,28 +124,28 @@ public class MemberController {
     }
 
     @PatchMapping("/info/update/name")
-    public ResponseEntity<String> updateName(@RequestBody UpdateNameRequestDto updateNameRequestDto, HttpSession session){
-        infoService.updateName(updateNameRequestDto.getMemName(), session);
+    public ResponseEntity<String> updateName(@RequestBody UpdateNameRequestDto updateNameRequestDto, @AuthenticationPrincipal MemberEntity member){
+        infoService.updateName(updateNameRequestDto.getMemName(), member);
         return ResponseEntity.ok("이름 수정 완료");
     }
 
     @PatchMapping("/info/update/type")
-    public ResponseEntity<String> updateType(@RequestBody UpdateTypeRequestDto updateTypeRequestDto, HttpSession session){
-        infoService.updateType(updateTypeRequestDto.getMemType(), session);
+    public ResponseEntity<String> updateType(@RequestBody UpdateTypeRequestDto updateTypeRequestDto, @AuthenticationPrincipal MemberEntity member){
+        infoService.updateType(updateTypeRequestDto.getMemType(), member);
         return ResponseEntity.ok("소속 수정 완료");
     }
 
     @PatchMapping("/info/update/password")
     public ResponseEntity<String> updatePassword(
             @RequestBody UpdatePasswordRequestDto updatePasswordRequestDto,
-            HttpSession session
+            @AuthenticationPrincipal MemberEntity member
             ){
         // System.out.println("start");
         infoService.updatePassword(
                 updatePasswordRequestDto.getCurrentPassword(),
                 updatePasswordRequestDto.getNewPassword(),
                 updatePasswordRequestDto.getConfirmPassword(),
-                session
+                member
         );
         // System.out.println("end");
         return ResponseEntity.ok("비밀번호 수정 완료");

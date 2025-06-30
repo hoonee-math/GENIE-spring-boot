@@ -2,11 +2,10 @@ package com.cj.genieq.member.service;
 
 import com.cj.genieq.member.dto.request.SignUpRequestDto;
 import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
-import jakarta.servlet.http.HttpSession;
 
 /**
  * 회원 인증 서비스 인터페이스
- * JWT 기반 인증으로 전환되면서 HttpSession 의존성 제거
+ * JWT 기반 인증으로 전환되면서 HttpSession 의존성 완전 제거
  */
 public interface AuthService {
     
@@ -26,11 +25,10 @@ public interface AuthService {
     LoginMemberResponseDto login(String email, String password);
 
     /**
-     * 회원탈퇴 (세션 의존성 제거 예정)
-     * 현재는 호환성을 위해 세션 매개변수 유지
-     * 향후 @AuthenticationPrincipal MemberEntity로 대체 예정
+     * 회원탈퇴 (JWT 기반으로 전환)
+     * @param email 탈퇴할 회원 이메일
      */
-    void withdraw(String email, HttpSession session);
+    void withdraw(String email);
 
     // 비밀번호 찾기
     void findPassword(String memEmail, String tempPassword);

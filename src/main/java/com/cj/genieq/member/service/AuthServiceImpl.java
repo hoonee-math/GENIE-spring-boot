@@ -6,7 +6,6 @@ import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.member.repository.MemberRepository;
 import com.cj.genieq.usage.service.UsageService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -109,16 +108,22 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void withdraw(String memEmail,  HttpSession session){
-        //이메일로 사용자 조회
-        // System.out.println("start");
+    /**
+     * 회원탈퇴 처리 (JWT 기반으로 전환)
+     * 세션 의존성 제거로 JWT 토큰 기반 인증에서는 서버측 세션 처리 불필요
+     * @param memEmail 탈퇴할 회원 이메일
+     */
+    public void withdraw(String memEmail) {
+        // 이메일로 사용자 조회
         MemberEntity member = memberRepository.findByMemEmail(memEmail)
-                .orElseThrow(()-> new IllegalArgumentException("회원이 존재하지 않습니다."));
-        // System.out.println("mid");
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+        
+        // 회원 삭제 플래그 설정 (소프트 삭제)
         member.setMemIsDeleted(1);
         memberRepository.save(member);
-        // System.out.println("end");
-        session.invalidate(); //세션 만료 처리
+        
+        // JWT 기반에서는 세션 처리 불필요
+        // 클라이언트에서 토큰 삭제 처리로 로그아웃 진행
     }
 
     @Override
