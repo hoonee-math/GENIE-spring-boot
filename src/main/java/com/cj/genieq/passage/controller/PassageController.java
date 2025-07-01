@@ -7,6 +7,9 @@ import com.cj.genieq.passage.service.PassageService;
 import com.cj.genieq.passage.service.PdfService;
 import com.cj.genieq.passage.service.TxtService;
 import com.cj.genieq.passage.service.WordService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -182,11 +185,23 @@ public class PassageController {
 
     // 최근 작업 내역 리스트
     @GetMapping("/select/recelist")
-    public ResponseEntity<?> selectRecent(@AuthenticationPrincipal MemberEntity member) {
-
+    public ResponseEntity<String> selectRecent(@AuthenticationPrincipal MemberEntity member) {
         List<PassageStorageEachResponseDto> recents = passageService.selectRecentList(member.getMemCode());
 
-        return ResponseEntity.ok(recents);
+        // ObjectMapper에 JavaTimeModule 등록
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // ISO 8601 형식으로 출력
+
+        try {
+            String jsonResponse = mapper.writeValueAsString(recents);
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body(jsonResponse);
+        } catch (Exception e) {
+            System.err.println("JSON 변환 오류: " + e.getMessage());
+            return ResponseEntity.status(500).body("[]");
+        }
     }
 
     // 휴지통 리스트
