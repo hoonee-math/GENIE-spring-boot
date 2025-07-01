@@ -208,16 +208,25 @@ public class MemberController {
 
     // 회원의 잔여 이용권 조회
     @GetMapping("/info/select/ticket")
-    public ResponseEntity<?> selectTicket(@AuthenticationPrincipal MemberEntity member){
-
-        int balance = infoService.getUsageBalance(member.getMemCode());
-        int total = infoService.getUsageTotal(member.getMemCode());
-
-        Map<String, Integer> response = new HashMap<>();
-        response.put("balance", balance);
-        response.put("total",   total);
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<String> selectTicket(@AuthenticationPrincipal MemberEntity member){
+        System.out.println("/info/select/ticket 로 요청 들어옴");
+        System.out.println("member : "+member.getMemCode());
+        Long memberCode = member.getMemCode();
+        System.out.println("memberCode : "+memberCode);
+        int balance = infoService.getUsageBalance(memberCode);
+        int total = infoService.getUsageTotal(memberCode);
+    
+        // JSON 문자열로 직접 반환 (임시 해결책)
+        String jsonResponse = String.format(
+            "{\"total\":%d, \"balance\":%d}", 
+            total, balance
+        );
+        
+        System.out.println("response: " + jsonResponse);
+        
+        return ResponseEntity.ok()
+            .header("Content-Type", "application/json")
+            .body(jsonResponse);
     }
 
     @PatchMapping("/info/update/name")

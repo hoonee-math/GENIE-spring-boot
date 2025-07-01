@@ -4,7 +4,8 @@ import com.cj.genieq.member.enums.SocialProvider;
 import com.cj.genieq.passage.entity.PassageEntity;
 import com.cj.genieq.payment.entity.PaymentEntity;
 import com.cj.genieq.usage.entity.UsageEntity;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore; // JSON 직렬화 시 제외용
+import jakarta.persistence.*; // JPA 엔티티 어노테이션
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
