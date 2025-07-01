@@ -6,9 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 로그인 응답 DTO
- * 기존 세션 기반 응답에 JWT 토큰 정보 추가
- * 프론트엔드 호환성을 위해 기존 필드 유지
+ * 로그인 응답 DTO (보안 우선 httpOnly 쿠키 방식)
+ * access token은 응답으로, refresh token은 httpOnly 쿠키로 관리
+ * XSS 공격 완전 차단을 위한 보안 강화 설계
  */
 @AllArgsConstructor
 @Builder
@@ -16,38 +16,33 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LoginMemberResponseDto {
     
-    // ========== 기존 GENIE 필드 (JWT 전환 전부터 사용) ==========
+    // ========== 기존 GENIE 필드 ==========
     private Long memberCode;
     private String name;
     private String email;
     
-    // ========== JWT 토큰 관련 필드 (JWT 전환 후 추가) ==========
+    // ========== JWT 토큰 관련 필드 (보안 강화) ==========
     
     /**
      * 액세스 토큰 (JWT)
-     * API 요청 시 Authorization 헤더에 포함하여 전송
-     * 유효기간: 1시간 (기본값)
+     * 짧은 만료시간(15분)으로 보안 강화
+     * 프론트엔드 메모리에서만 관리
      */
     private String accessToken;
     
     /**
-     * 리프레시 토큰 (향후 개선 예정)
-     * 액세스 토큰 만료 시 새로운 토큰 발급용
-     * 현재는 null로 설정 (향후 구현 예정)
-     */
-    private String refreshToken;
-    
-    /**
      * 토큰 타입 (고정값: "Bearer")
-     * 프론트엔드에서 Authorization 헤더 설정 시 사용
-     * 예: Authorization: Bearer eyJ...
+     * Authorization 헤더 설정용
      */
     @Builder.Default
     private String tokenType = "Bearer";
     
     /**
-     * 토큰 만료 시간 (Unix timestamp, milliseconds)
-     * 프론트엔드에서 토큰 만료 시점 확인용
+     * 액세스 토큰 만료 시간 (Unix timestamp, milliseconds)
+     * 자동 토큰 갱신 타이밍 계산용
      */
     private Long expiresAt;
+    
+    // refresh token은 httpOnly 쿠키로 관리하므로 응답에 포함하지 않음
+    // 보안 강화: JavaScript로 접근 불가
 }

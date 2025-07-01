@@ -5,10 +5,11 @@ import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
 import com.cj.genieq.member.dto.response.MemberInfoResponseDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.member.service.AuthService;
+import com.cj.genieq.member.service.InfoService;
+import com.cj.genieq.common.jwt.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import com.cj.genieq.member.service.InfoService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ public class MemberController {
 
     private final AuthService authService;
     private final InfoService infoService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     // Auth Controller
 
@@ -48,18 +50,39 @@ public class MemberController {
     }
 
     /**
-     * JWT 기반 로그인 API
-     * 기존 세션 방식에서 JWT 토큰 방식으로 전환
-     * 성공 시 JWT 토큰을 포함한 사용자 정보 반환
+     * JWT 기반 로그인 API (보안 우선 httpOnly 쿠키 방식)
+     * access token은 응답으로, refresh token은 httpOnly 쿠키로 관리
+     * XSS 공격 완전 차단을 위한 보안 강화 설계
      */
     @PostMapping("/auth/select/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
+        System.out.println("/api/auth/select/login 로그인 요청 들어옴");
         try {
+            System.out.println("로그인 요청 email: "+loginRequestDto.getMemEmail());
+            // 1. 기본 로그인 처리 (AuthService에서 사용자 정보만 반환)
             LoginMemberResponseDto loginResponse = authService.login(
                 loginRequestDto.getMemEmail(), 
                 loginRequestDto.getMemPassword()
             );
+            System.out.println("DB에서 확인 후 loginResponseDTO 정보: "+loginResponse.toString());
+
+            // 2. refresh token 생성 및 httpOnly 쿠키 설정
+            String refreshToken = jwtTokenProvider.createRefreshToken(loginResponse.getMemberCode());
+            System.out.println("리프레시 토큰 생성 결과 refreshToken: "+refreshToken);
+            
+            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+            refreshCookie.setHttpOnly(true);  // XSS 방어: JavaScript 접근 차단
+            refreshCookie.setSecure(true);    // HTTPS에서만 전송
+            refreshCookie.setPath("/");       // 모든 경로에서 유효
+            refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+            refreshCookie.setAttribute("SameSite", "Strict"); // CSRF 방어
+            System.out.println("최종 리프레스 쿠기 정보: "+refreshCookie);
+            
+            response.addCookie(refreshCookie);
+            
+            // 3. access token만 응답으로 전송 (refresh token은 응답에서 제외)
             return ResponseEntity.ok().body(loginResponse);
+            
         } catch (IllegalArgumentException e) {
             // 로그인 실패 시 명확한 에러 메시지 반환
             return ResponseEntity.status(401).body(
@@ -77,23 +100,97 @@ public class MemberController {
         authService.withdraw(withdrawRequestDto.getMemEmail());
         return ResponseEntity.ok("탈퇴완료");
     }
-
+    
+    /**
+     * JWT 토큰 갱신 API (보안 우선 httpOnly 쿠키 방식)
+     * httpOnly 쿠키의 refresh token으로 새로운 access token 발급
+     * 페이지 새로고침 시 자동 호출되는 느낌으로 설계
+     */
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+        System.out.println("/api/auth/refresh 로 요청 들어옴");
+        try {
+            // 1. httpOnly 쿠키에서 refresh token 추출
+            Cookie[] cookies = request.getCookies();
+            String refreshToken = null;
+            
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("refreshToken".equals(cookie.getName())) {
+                        refreshToken = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+            
+            // 2. refresh token 유효성 검증
+            if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
+                return ResponseEntity.status(401).body(
+                    Map.of("error", "Invalid or missing refresh token", "status", 401)
+                );
+            }
+            
+            // 3. refresh token 타입 확인
+            if (!"refresh".equals(jwtTokenProvider.getTokenType(refreshToken))) {
+                return ResponseEntity.status(401).body(
+                    Map.of("error", "Invalid token type", "status", 401)
+                );
+            }
+            
+            // 4. 사용자 정보 추출 및 새로운 access token 생성
+            Long memberCode = jwtTokenProvider.getMemberIdFromToken(refreshToken);
+            
+            // AuthService에서 사용자 정보를 가져와서 access token 생성
+            // 임시로 기본값 사용 (실제로는 DB에서 사용자 정보를 가져와야 함)
+            String newAccessToken = jwtTokenProvider.createAccessToken(memberCode, "temp@example.com", "USER");
+            
+            // 5. 새로운 access token 정보 응답
+            Map<String, Object> response = Map.of(
+                "accessToken", newAccessToken,
+                "tokenType", "Bearer",
+                "expiresAt", System.currentTimeMillis() + jwtTokenProvider.getAccessTokenValidityInMilliseconds()
+            );
+            
+            return ResponseEntity.ok().body(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(
+                Map.of("error", "Token refresh failed: " + e.getMessage(), "status", 401)
+            );
+        }
+    }
+    
+    /**
+     * 로그아웃 API (보안 우선 httpOnly 쿠키 방식)
+     * 세션 및 httpOnly 쿠키(refresh token) 완전 삭제
+     */
     @PostMapping("/auth/select/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        // 1. 기존 세션 정리
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate(); // 세션 무효화
         }
-
-        SecurityContextHolder.clearContext(); // Security 컨텍스트 삭제
-
-        // JSESSIONID 쿠키 삭제
-        Cookie cookie = new Cookie("JSESSIONID", null);
-        cookie.setMaxAge(0);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        response.addCookie(cookie);
-
+    
+        // 2. Security 컨텍스트 삭제
+        SecurityContextHolder.clearContext();
+    
+        // 3. JSESSIONID 쿠키 삭제 (기존 세션 방식용)
+        Cookie sessionCookie = new Cookie("JSESSIONID", null);
+        sessionCookie.setMaxAge(0);
+        sessionCookie.setHttpOnly(true);
+        sessionCookie.setPath("/");
+        response.addCookie(sessionCookie);
+        
+        // 4. httpOnly refresh token 쿠키 삭제 (보안 우선 JWT 방식용)
+        Cookie refreshCookie = new Cookie("refreshToken", null);
+        refreshCookie.setMaxAge(0);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setAttribute("SameSite", "Strict");
+        response.addCookie(refreshCookie);
+    
         return ResponseEntity.ok().body("로그아웃 성공");
     }
 

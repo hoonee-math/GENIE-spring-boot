@@ -20,13 +20,14 @@ public class JwtTokenProvider {
 
     // JWT 서명에 사용할 비밀키 (application-private.properties에서 주입)
     private final SecretKey secretKey;
-    
-    // 액세스 토큰 만료시간 (기본: 1시간)
+
+    // 액세스 토큰 만료시간 (기본: 15분)
     private final long accessTokenValidityInMilliseconds;
-    
+
     // 리프레시 토큰 만료시간 (기본: 7일)
     private final long refreshTokenValidityInMilliseconds;
-
+    
+    // 리프레시 토큰 만료시간 (기본: 7일)
     /**
      * JwtTokenProvider 생성자
      * @param secretKey JWT 서명용 비밀키 (64자 이상 필수)
@@ -35,8 +36,8 @@ public class JwtTokenProvider {
      */
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secretKey,
-            @Value("${jwt.access-token-validity:3600000}") long accessTokenValidityInMilliseconds,
-            @Value("${jwt.refresh-token-validity:604800000}") long refreshTokenValidityInMilliseconds) {
+            @Value("${jwt.access-token-validity:900000}") long accessTokenValidityInMilliseconds, // 15분으로 변경 (900초 = 900000ms)
+            @Value("${jwt.refresh-token-validity:604800000}") long refreshTokenValidityInMilliseconds) { // 7일 유지
         
         // 비밀키 유효성 검증 (반드시 application-private.properties에 설정 필요)
         if (secretKey == null || secretKey.trim().isEmpty()) {

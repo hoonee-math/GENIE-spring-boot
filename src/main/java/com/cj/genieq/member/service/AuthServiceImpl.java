@@ -100,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(member.getMemEmail())
                 // JWT 토큰 필드 (새로 추가)
                 .accessToken(accessToken)
-                .refreshToken(null) // 향후 구현 예정
+                //.refreshToken(null) // refresh token은 httpOnly 쿠키로 관리하므로 응답에 포함하지 않음 // 보안 강화: JavaScript로 접근 불가
                 .tokenType("Bearer") // 기본값으로 설정됨
                 .expiresAt(expiresAt)
                 .build();
@@ -140,5 +140,6 @@ public class AuthServiceImpl implements AuthService {
         //db에 비밀번호 저장
         memberRepository.save(member);
     }
-
-}
+    
+    }
+    
