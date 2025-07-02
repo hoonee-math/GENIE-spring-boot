@@ -6,10 +6,7 @@ import com.cj.genieq.payment.entity.PaymentEntity;
 import com.cj.genieq.usage.entity.UsageEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore; // JSON 직렬화 시 제외용
 import jakarta.persistence.*; // JPA 엔티티 어노테이션
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -20,6 +17,7 @@ import java.util.List;
 @Entity
 @Table(name = "member") // ✅ 테이블 이름 소문자
 @Data
+@ToString(exclude = {"usages", "passages", "payments"})  // ← 이거 하나만 추가하면 끝!
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
