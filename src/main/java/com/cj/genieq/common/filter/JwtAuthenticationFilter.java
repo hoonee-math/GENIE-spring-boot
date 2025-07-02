@@ -54,10 +54,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     
                     // 계정이 활성화되어 있고 탈퇴하지 않은 상태인지 확인
                     if (member.getMemIsDeleted() == 0) {
-                        // 토큰에서 권한 정보 추출
+                        // 토큰에서 권한 정보 추출, 일반 사용자인지 확인 작업
                         String role = jwtTokenProvider.getRoleFromToken(token);
-                        if (role == null) {
+                        // 🔧 수정: 빈 문자열도 체크하고 ROLE_ 접두사 추가
+                        if (role == null || role.trim().isEmpty()) {
                             role = "ROLE_USER"; // 기본 권한
+                        } else if (!role.startsWith("ROLE_")) {
+                            role = "ROLE_" + role; // ROLE_ 접두사 추가
                         }
                         
                         // Spring Security 인증 객체 생성

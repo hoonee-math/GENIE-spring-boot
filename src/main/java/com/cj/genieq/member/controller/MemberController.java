@@ -139,21 +139,32 @@ public class MemberController {
             
             // 4. 사용자 정보 추출 및 새로운 access token 생성
             Long memberCode = jwtTokenProvider.getMemberIdFromToken(refreshToken);
+
+            // DB에서 사용자 정보 조회하여 실제 정보로 토큰 생성
+            MemberInfoResponseDto memberInfo = infoService.getMemberInfo(memberCode);
+
             
-            // AuthService에서 사용자 정보를 가져와서 access token 생성
-            // 임시로 기본값 사용 (실제로는 DB에서 사용자 정보를 가져와야 함)
-            String newAccessToken = jwtTokenProvider.createAccessToken(memberCode, "temp@example.com", "USER");
-            
-            // 5. 새로운 access token 정보 응답
-            Map<String, Object> response = Map.of(
-                "accessToken", newAccessToken,
-                "tokenType", "Bearer",
-                "expiresAt", System.currentTimeMillis() + jwtTokenProvider.getAccessTokenValidityInMilliseconds()
+            String newAccessToken = jwtTokenProvider.createAccessToken(
+                memberCode, memberInfo.getEmail(), "USER" // 기본 권한으로 설정 or memberInfo.getType()
             );
+            
+            // 5. 로그인과 동일한 구조로 응답 (LoginMemberResponseDto 사용)
+            LoginMemberResponseDto response = LoginMemberResponseDto.builder()
+                .memberCode(memberInfo.getMemCode())
+                .name(memberInfo.getName())        // 사용자 이름
+                .email(memberInfo.getEmail())      // 사용자 이메일
+                .accessToken(newAccessToken)
+                .tokenType("Bearer")
+                .expiresAt(System.currentTimeMillis() + jwtTokenProvider.getAccessTokenValidityInMilliseconds())
+                .build();
+                    
+
+            System.out.println("토큰 갱신 성공 - memberCode: " + memberCode);
             
             return ResponseEntity.ok().body(response);
             
         } catch (Exception e) {
+            System.err.println("토큰 갱신 실패: " + e.getMessage());
             return ResponseEntity.status(401).body(
                 Map.of("error", "Token refresh failed: " + e.getMessage(), "status", 401)
             );
