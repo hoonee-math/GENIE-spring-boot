@@ -1,12 +1,12 @@
 package com.cj.genieq.member.controller;
 
+import com.cj.genieq.common.jwt.JwtTokenProvider;
 import com.cj.genieq.member.dto.request.*;
 import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
 import com.cj.genieq.member.dto.response.MemberInfoResponseDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.member.service.AuthService;
 import com.cj.genieq.member.service.InfoService;
-import com.cj.genieq.common.jwt.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,14 +18,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 
 @RestController //컨트롤러에서 반환된 값이 JSON 형태로 응답됨
 @RequestMapping("/api")
 @RequiredArgsConstructor //자동 생성자 주입
-public class MemberController {
+public class MemberControllerBackup {
 
     private final AuthService authService;
     private final InfoService infoService;
@@ -72,10 +71,10 @@ public class MemberController {
             
             Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
             refreshCookie.setHttpOnly(true);  // XSS 방어: JavaScript 접근 차단
-            refreshCookie.setSecure(true);   // HTTPS에서만 전송 // ?? 개발환경: HTTP 허용, 운영환경에서는 true로 변경 필요
+            refreshCookie.setSecure(false);   // 개발환경: HTTP 허용, 운영환경에서는 true로 변경 필요
             refreshCookie.setPath("/");       // 모든 경로에서 유효
             refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
-            refreshCookie.setAttribute("SameSite", "strict"); // CSRF 방어 // ?? 개발환경: Lax, 운영환경에서는 Strict ?
+            refreshCookie.setAttribute("SameSite", "Lax"); // 개발환경: Lax, 운영환경에서는 Strict
             System.out.println("최종 리프레스 쿠기 정보: "+refreshCookie);
             
             response.addCookie(refreshCookie);
@@ -157,7 +156,6 @@ public class MemberController {
                 .tokenType("Bearer")
                 .expiresAt(System.currentTimeMillis() + jwtTokenProvider.getAccessTokenValidityInMilliseconds())
                 .build();
-                    
 
             System.out.println("토큰 갱신 성공 - memberCode: " + memberCode);
             
@@ -197,9 +195,9 @@ public class MemberController {
         Cookie refreshCookie = new Cookie("refreshToken", null);
         refreshCookie.setMaxAge(0);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true); // 개발환경: HTTP 허용, 운영환경에서는 true로 변경 필요 ?
+        refreshCookie.setSecure(false);  // 개발환경: HTTP 허용, 운영환경에서는 true로 변경 필요
         refreshCookie.setPath("/");
-        refreshCookie.setAttribute("SameSite", "Strict"); // 개발환경: Lax, 운영환경: strict ?
+        refreshCookie.setAttribute("SameSite", "Lax"); // 개발환경: Lax
         response.addCookie(refreshCookie);
     
         return ResponseEntity.ok().body("로그아웃 성공");

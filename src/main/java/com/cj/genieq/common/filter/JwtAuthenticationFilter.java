@@ -38,6 +38,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                    HttpServletResponse response, 
                                    FilterChain filterChain) throws ServletException, IOException {
         
+        // 현재 요청에 대한 인증 정보 로깅 (디버그용)
+        logAuthenticationInfo(request);
+        
         try {
             // Authorization 헤더에서 JWT 토큰 추출
             String token = getTokenFromRequest(request);
