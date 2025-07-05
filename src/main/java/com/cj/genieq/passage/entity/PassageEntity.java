@@ -2,6 +2,7 @@ package com.cj.genieq.passage.entity;
 
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.question.entity.QuestionEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,10 +56,12 @@ public class PassageEntity {
     @Column(name = "pas_is_generated")
     private Integer isGenerated;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "mem_code") // ✅ FK도 소문자
     private MemberEntity member;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "passage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuestionEntity> questions;
 }

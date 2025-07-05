@@ -1,6 +1,7 @@
 package com.cj.genieq.tosspay.entity;
 
 import com.cj.genieq.payment.entity.PaymentEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,6 +18,7 @@ public class TossPayEntity {
     @Column(name = "toss_id") // ✅ 컬럼명 소문자
     private Long tossId;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "toss_paycode", nullable = false) // ✅ FK도 소문자
     private PaymentEntity payment;

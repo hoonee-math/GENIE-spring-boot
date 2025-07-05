@@ -103,12 +103,15 @@ public class MemberEntity {
 
     // ========== 연관 관계 매핑 ==========
 
+    @JsonIgnore
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     private List<UsageEntity> usages = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     private List<PassageEntity> passages = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     private List<PaymentEntity> payments = new ArrayList<>();
     

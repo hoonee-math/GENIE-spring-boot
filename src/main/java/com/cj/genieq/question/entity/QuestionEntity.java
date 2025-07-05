@@ -1,6 +1,7 @@
 package com.cj.genieq.question.entity;
 
 import com.cj.genieq.passage.entity.PassageEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +39,7 @@ public class QuestionEntity {
     @Column(name = "que_description", columnDefinition = "LONGTEXT")
     private String queDescription;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pas_code") // ✅ FK도 소문자
     private PassageEntity passage;

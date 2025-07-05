@@ -1,6 +1,7 @@
 package com.cj.genieq.usage.entity;
 
 import com.cj.genieq.member.entity.MemberEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +37,7 @@ public class UsageEntity {
     @Column(name = "usa_balance")
     private int usaBalance;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "mem_code") // ✅ FK도 소문자
     private MemberEntity member;

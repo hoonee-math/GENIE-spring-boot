@@ -1,6 +1,7 @@
 package com.cj.genieq.ticket.entity;
 
 import com.cj.genieq.payment.entity.PaymentEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,7 @@ public class TicketEntity {
     @Column(name = "tic_price")
     private Integer price;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "ticket")
     private List<PaymentEntity> payments = new ArrayList<>();
 }

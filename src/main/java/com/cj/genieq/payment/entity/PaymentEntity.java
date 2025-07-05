@@ -2,6 +2,7 @@ package com.cj.genieq.payment.entity;
 
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.ticket.entity.TicketEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,10 +35,12 @@ public class PaymentEntity {
     @Column(name = "pay_date")
     private LocalDateTime date;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "mem_code") // ✅ FK도 소문자
     private MemberEntity member;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "tic_code") // ✅ FK도 소문자
     private TicketEntity ticket;
