@@ -10,7 +10,6 @@ import com.cj.genieq.common.jwt.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -176,24 +175,12 @@ public class MemberController {
      * 세션 및 httpOnly 쿠키(refresh token) 완전 삭제
      */
     @PostMapping("/auth/select/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        // 1. 기존 세션 정리
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate(); // 세션 무효화
-        }
+    public ResponseEntity<?> logout(HttpServletResponse response) {
     
-        // 2. Security 컨텍스트 삭제
+        // Security 컨텍스트 삭제
         SecurityContextHolder.clearContext();
-    
-        // 3. JSESSIONID 쿠키 삭제 (기존 세션 방식용)
-        Cookie sessionCookie = new Cookie("JSESSIONID", null);
-        sessionCookie.setMaxAge(0);
-        sessionCookie.setHttpOnly(true);
-        sessionCookie.setPath("/");
-        response.addCookie(sessionCookie);
         
-        // 4. httpOnly refresh token 쿠키 삭제 (보안 우선 JWT 방식용)
+        // httpOnly refresh token 쿠키 삭제 (보안 우선 JWT 방식용)
         Cookie refreshCookie = new Cookie("refreshToken", null);
         refreshCookie.setMaxAge(0);
         refreshCookie.setHttpOnly(true);
