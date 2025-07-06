@@ -20,5 +20,6 @@ public class AuthenticatedMemberDto {
     private String memName;
     private String memEmail;
     private String role;        /* 사용자 권한 (ROLE_USER, ROLE_ADMIN 등) */
-    private Boolean enabled;    /* 계정 활성화 여부 */
+    // private Boolean enabled;    /* OAuth2 이용시 계정 활성화 여부에 사용됨 */
+    private int memIsDeleted;
 }

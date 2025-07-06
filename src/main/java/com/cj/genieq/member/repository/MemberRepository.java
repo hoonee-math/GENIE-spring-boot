@@ -108,7 +108,7 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
    * @return 인증에 필요한 최소 정보만 포함된 DTO (없으면 empty)
    */
   @Query("SELECT new com.cj.genieq.member.dto.AuthenticatedMemberDto(" +
-         "m.memCode, m.memName, m.memEmail, m.role, m.enabled) " +
-         "FROM MemberEntity m WHERE m.memCode = :memCode AND m.memIsDeleted = 0")
+         "m.memCode, m.memName, m.memEmail, m.role, m.memIsDeleted)" + // \" +, m.enabled) " +
+         "FROM MemberEntity m WHERE m.memCode = :memCode")
   Optional<AuthenticatedMemberDto> findAuthenticatedMemberById(@Param("memCode") Long memCode);
   }

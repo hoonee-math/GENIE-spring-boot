@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -50,10 +51,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long memCode = jwtTokenProvider.getMemberIdFromToken(token);
                 
                 // GENIE의 MemberRepository로 사용자 정보 조회
-                Optional<MemberEntity> memberOptional = memberRepository.findById(memCode);
-                
+                Optional<AuthenticatedMemberDto> memberOptional = memberRepository.findAuthenticatedMemberById(memCode);
+
                 if (memberOptional.isPresent()) {
-                    MemberEntity member = memberOptional.get();
+                    AuthenticatedMemberDto member = memberOptional.get();
                     
                     // 계정이 활성화되어 있고 탈퇴하지 않은 상태인지 확인
                     if (member.getMemIsDeleted() == 0) {
@@ -67,9 +68,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         }
                         
                         // Spring Security 인증 객체 생성
-                        UsernamePasswordAuthenticationToken authentication = 
+                        UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
-                                member,  // Principal (인증된 사용자 정보 - GENIE의 MemberEntity)
+                                member,  // Principal (인증된 사용자 정보 - AuthenticatedMemberDto)
                                 null,   // Credentials (비밀번호 등, JWT에서는 불필요)
                                 Collections.singletonList(new SimpleGrantedAuthority(role)) // 권한
                             );
@@ -80,7 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         log.debug("JWT authentication successful for member: {} (memCode: {})", 
                                 member.getMemEmail(), member.getMemCode());
                     } else {
-                        log.warn("Member account is deleted/disabled: {} (memCode: {})", 
+                        log.warn("Deleted member account access attempt: {} (memCode: {})",
                                 member.getMemEmail(), member.getMemCode());
                         clearSecurityContext();
                     }
