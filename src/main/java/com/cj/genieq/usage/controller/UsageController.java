@@ -1,5 +1,6 @@
 package com.cj.genieq.usage.controller;
 
+import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.usage.dto.response.UsageListResponseDto;
 import com.cj.genieq.usage.service.UsageService;
@@ -22,7 +23,7 @@ public class UsageController {
     public ResponseEntity<?> selectList(
             @RequestParam("startDate")LocalDate startDate,
             @RequestParam("endDate") LocalDate endDate,
-            @AuthenticationPrincipal MemberEntity member){
+            @AuthenticationPrincipal AuthenticatedMemberDto member){
 
         List<UsageListResponseDto> usages = usageService.getUsageList(member.getMemCode(), startDate, endDate);
         return ResponseEntity.ok(usages);

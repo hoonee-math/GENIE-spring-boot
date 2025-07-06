@@ -1,5 +1,6 @@
 package com.cj.genieq.payment.controller;
 
+import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.payment.dto.request.PaymentRequestDto;
 import com.cj.genieq.payment.dto.response.PaymentListResponseDto;
@@ -20,7 +21,7 @@ public class PaymentController {
 
     // 결제 내역 추가
     @PostMapping("/insert/each")
-    public ResponseEntity<?> insertEach(@AuthenticationPrincipal MemberEntity member, @RequestBody PaymentRequestDto paymentRequestDto) {
+    public ResponseEntity<?> insertEach(@AuthenticationPrincipal AuthenticatedMemberDto member, @RequestBody PaymentRequestDto paymentRequestDto) {
 
         //paymentService.insertPayment(member.getMemCode(), paymentRequestDto.getTicCode());
 
@@ -34,7 +35,7 @@ public class PaymentController {
             @RequestParam("endDate") LocalDate endDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @AuthenticationPrincipal MemberEntity member) {
+            @AuthenticationPrincipal AuthenticatedMemberDto member) {
 
         List<PaymentListResponseDto> payments = paymentService.getPaymentList(member.getMemCode(), startDate, endDate);
         return ResponseEntity.ok(payments);

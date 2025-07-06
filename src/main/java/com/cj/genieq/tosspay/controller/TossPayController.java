@@ -1,5 +1,6 @@
 package com.cj.genieq.tosspay.controller;
 
+import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.payment.service.PaymentService;
@@ -90,7 +91,7 @@ public class TossPayController {
     @PostMapping("/confirm")
     public ResponseEntity<String> confirm(
             HttpSession session,
-            @AuthenticationPrincipal MemberEntity member,
+            @AuthenticationPrincipal AuthenticatedMemberDto member,
             @RequestBody ConfirmPaymentRequestDto dto
     ) throws Exception {
         try {

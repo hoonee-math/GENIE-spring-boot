@@ -43,7 +43,7 @@ public class PassageController {
      */
     @PostMapping("/insert/each")
     public ResponseEntity<?> insertEach(
-            @AuthenticationPrincipal MemberEntity member, // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
+            @AuthenticationPrincipal AuthenticatedMemberDto member, // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
             @RequestBody PassageInsertRequestDto passageDto) {
 
         // 지문 생성 (기존 비즈니스 로직 유지)
