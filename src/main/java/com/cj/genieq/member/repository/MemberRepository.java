@@ -1,5 +1,6 @@
 package com.cj.genieq.member.repository;
 
+import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.member.enums.SocialProvider;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -96,4 +97,18 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
    */
   @Query("SELECT m FROM MemberEntity m WHERE m.provider = :provider AND m.providerId = :providerId AND m.enabled = true AND m.memIsDeleted = 0")
   Optional<MemberEntity> findActiveSocialUser(@Param("provider") SocialProvider provider, @Param("providerId") String providerId);
-}
+  
+  // ========== JWT 인증 관련 메서드 ==========
+  
+  /**
+   * JWT 인증용 경량화된 사용자 정보 조회
+   * SecurityContext에 저장할 AuthenticatedMemberDto를 직접 생성
+   * 연관관계 제외로 LazyInitializationException 방지 및 성능 최적화
+   * @param memCode 회원 고유 코드
+   * @return 인증에 필요한 최소 정보만 포함된 DTO (없으면 empty)
+   */
+  @Query("SELECT new com.cj.genieq.member.dto.AuthenticatedMemberDto(" +
+         "m.memCode, m.memName, m.memEmail, m.role, m.enabled) " +
+         "FROM MemberEntity m WHERE m.memCode = :memCode AND m.memIsDeleted = 0")
+  Optional<AuthenticatedMemberDto> findAuthenticatedMemberById(@Param("memCode") Long memCode);
+  }
