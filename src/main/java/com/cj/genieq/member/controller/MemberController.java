@@ -11,6 +11,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-
+@Slf4j
 @RestController //컨트롤러에서 반환된 값이 JSON 형태로 응답됨
 @RequestMapping("/api")
 @RequiredArgsConstructor //자동 생성자 주입
@@ -95,9 +96,29 @@ public class MemberController {
      * 기존 세션 방식에서 JWT 토큰 기반 인증으로 전환
      */
     @PutMapping("/auth/remove/withdraw")
-    public ResponseEntity<?> withdraw(@RequestBody WithdrawRequestDto withdrawRequestDto) {
-        authService.withdraw(withdrawRequestDto.getMemEmail());
-        return ResponseEntity.ok("탈퇴완료");
+    public ResponseEntity<?> withdraw(@RequestBody WithdrawRequestDto withdrawRequestDto, @AuthenticationPrincipal AuthenticatedMemberDto member) {
+        // 1. 요청 이메일과 로그인 사용자 이메일 비교
+        if (!member.getMemEmail().equals(withdrawRequestDto.getMemEmail())) {
+            // 보안 위험 로그
+            log.warn("회원탈퇴 요청 이메일 불일치 - 로그인 사용자: {} (memCode: {}), 요청 이메일: {}", member.getMemEmail(), member.getMemCode(), withdrawRequestDto.getMemEmail());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "본인의 계정만 탈퇴할 수 있습니다.", "status", 403));
+        }
+
+        // 2. 정상적인 탈퇴 처리
+        log.info("회원탈퇴 요청 - 사용자: {} (memCode: {})", member.getMemEmail(), member.getMemCode());
+
+        try {
+            authService.withdraw(withdrawRequestDto.getMemEmail());
+            // 3. 성공 로그
+            log.info("회원탈퇴 완료 - 사용자: {} (memCode: {})", member.getMemEmail(), member.getMemCode());
+            return ResponseEntity.ok(Map.of("message", "탈퇴완료", "status", 200));
+
+        } catch (Exception e) {
+            // 4. 실패 로그
+            log.error("회원탈퇴 실패 - 사용자: {} (memCode: {}), 오류: {}", member.getMemEmail(), member.getMemCode(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "탈퇴 처리 중 오류가 발생했습니다.", "status", 500));
+        }
     }
     
     /**
