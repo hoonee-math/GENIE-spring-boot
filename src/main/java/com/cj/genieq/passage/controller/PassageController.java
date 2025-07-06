@@ -1,5 +1,6 @@
 package com.cj.genieq.passage.controller;
 
+import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.passage.dto.request.*;
 import com.cj.genieq.passage.dto.response.*;
@@ -68,7 +69,7 @@ public class PassageController {
     }
 
     @GetMapping("/select/prevlist")
-    public ResponseEntity<?> selectPrevList(@AuthenticationPrincipal MemberEntity member) {
+    public ResponseEntity<?> selectPrevList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
         try {
 
             List<PassagePreviewListDto> previews = passageService.getPreviewList(member.getMemCode());
@@ -122,7 +123,7 @@ public class PassageController {
 
     // 지문 + 문항 저장
     @PostMapping("/ques/insert/each")
-    public ResponseEntity<?> savePassage(@AuthenticationPrincipal MemberEntity member, @RequestBody PassageWithQuestionsRequestDto requestDto) {
+    public ResponseEntity<?> savePassage(@AuthenticationPrincipal AuthenticatedMemberDto member, @RequestBody PassageWithQuestionsRequestDto requestDto) {
 
         PassageWithQuestionsResponseDto responseDto = passageService.savePassageWithQuestions(member.getMemCode(), requestDto);
 
@@ -139,7 +140,7 @@ public class PassageController {
     // 지문 + 문항 수정
     @PutMapping("/ques/update/{pasCode}")
     public ResponseEntity<PassageWithQuestionsResponseDto> updatePassage(
-            @AuthenticationPrincipal MemberEntity member,
+            @AuthenticationPrincipal AuthenticatedMemberDto member,
             @PathVariable Long pasCode,
             @RequestBody PassageWithQuestionsRequestDto requestDto) {
 
@@ -150,7 +151,7 @@ public class PassageController {
 
     // 자료실 메인화면 리스트(즐겨찾기+최근 작업)
     @GetMapping("/select/list")
-    public ResponseEntity<?> selectList(@AuthenticationPrincipal MemberEntity member) {
+    public ResponseEntity<?> selectList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
 
         try {
             List<PassageStorageEachResponseDto> favorites = passageService.selectPassageListInStorage(member.getMemCode(), 1, 5);
@@ -176,7 +177,7 @@ public class PassageController {
 
     // 즐겨찾기 리스트
     @GetMapping("/select/favolist")
-    public ResponseEntity<?> selectFavoList(@AuthenticationPrincipal MemberEntity member) {
+    public ResponseEntity<?> selectFavoList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
 
         List<PassageStorageEachResponseDto> favorites = passageService.selectFavoriteList(member.getMemCode());
 
@@ -185,7 +186,7 @@ public class PassageController {
 
     // 최근 작업 내역 리스트
     @GetMapping("/select/recelist")
-    public ResponseEntity<String> selectRecent(@AuthenticationPrincipal MemberEntity member) {
+    public ResponseEntity<String> selectRecent(@AuthenticationPrincipal AuthenticatedMemberDto member) {
         List<PassageStorageEachResponseDto> recents = passageService.selectRecentList(member.getMemCode());
 
         // ObjectMapper에 JavaTimeModule 등록
@@ -206,7 +207,7 @@ public class PassageController {
 
     // 휴지통 리스트
     @GetMapping("/select/deletedList")
-    public ResponseEntity<?> selectDeletedList(@AuthenticationPrincipal MemberEntity member) {
+    public ResponseEntity<?> selectDeletedList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
 
         List<PassageStorageEachResponseDto> deleted = passageService.findDeletedByMember(member.getMemCode());
 
@@ -214,7 +215,7 @@ public class PassageController {
     }
 
     @GetMapping("/select/count/recent")
-    public ResponseEntity<?> countRecentChange(@AuthenticationPrincipal MemberEntity member){
+    public ResponseEntity<?> countRecentChange(@AuthenticationPrincipal AuthenticatedMemberDto member){
 
         int numberOfRecentChange = passageService.countRecentChange(member.getMemCode());
 
