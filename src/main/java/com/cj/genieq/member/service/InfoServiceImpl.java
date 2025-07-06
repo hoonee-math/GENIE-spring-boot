@@ -63,12 +63,10 @@ public class InfoServiceImpl implements InfoService {
 
     @Override
     @Transactional
-    public void updateName(String memName, MemberEntity member) {
-        // 매개변수로 받은 member 엔티티 직접 사용
-        if (member == null) {
-            throw new IllegalArgumentException("인증된 사용자 정보가 없습니다.");
-        }
-        
+    public void updateName(String memName, Long memCode) {
+
+        MemberEntity member = memberRepository.findById(memCode).orElseThrow(() -> new EntityNotFoundException("회원 정보가 존재하지 않습니다."));
+
         // 이름 수정 후 저장
         member.setMemName(memName);
         memberRepository.save(member);
@@ -76,11 +74,9 @@ public class InfoServiceImpl implements InfoService {
 
     @Override
     @Transactional
-    public void updateType(String memType, MemberEntity member) {
-        // 매개변수로 받은 member 엔티티 직접 사용
-        if (member == null) {
-            throw new IllegalArgumentException("인증된 사용자 정보가 없습니다.");
-        }
+    public void updateType(String memType, Long memCode) {
+
+        MemberEntity member = memberRepository.findById(memCode).orElseThrow(() -> new EntityNotFoundException("회원 정보가 존재하지 않습니다."));
         
         // 소속 수정 후 저장
         member.setMemType(memType);
@@ -89,11 +85,9 @@ public class InfoServiceImpl implements InfoService {
 
     @Override
     @Transactional
-    public void updatePassword(String currentPassword, String newPassword, String confirmPassword, MemberEntity member){
-        // 매개변수로 받은 member 엔티티 직접 사용
-        if (member == null) {
-            throw new IllegalArgumentException("인증된 사용자 정보가 없습니다.");
-        }
+    public void updatePassword(String currentPassword, String newPassword, String confirmPassword, Long memCode){
+
+        MemberEntity member = memberRepository.findById(memCode).orElseThrow(() -> new EntityNotFoundException("회원 정보가 존재하지 않습니다."));
         
         // 현재 비밀번호 검증
         if(!passwordEncoder.matches(currentPassword, member.getMemPassword())){
