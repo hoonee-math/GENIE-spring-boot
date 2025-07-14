@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class PassageSelectResponseDto {
     private Long pasCode;
     private String title;
-    private String type;
+    private String pasType; // 인문, 과학, 예술, 사회, 기술, 독서론
     private String keyword;
     private String content;
     private String gist;

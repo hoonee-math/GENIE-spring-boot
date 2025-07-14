@@ -16,7 +16,7 @@ import java.util.List;
 public class PassageWithQuestionsResponseDto {
     private Long pasCode;
     private String title;
-    private String type;
+    private String pasType;
     private String keyword;
     private String content;
     private String gist;
