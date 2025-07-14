@@ -1,6 +1,7 @@
 package com.cj.genieq.passage.dto.request;
 
 
+import com.cj.genieq.passage.dto.DescriptionDto;
 import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,12 +17,10 @@ import java.util.List;
 
 //지문 + 저장에 사용
 public class PassageWithQuestionsRequestDto {
-    private String type;
-    private String keyword;
     private String title;
     private String content;
-    private String gist;
     private Integer isGenerated;
+    private List<DescriptionDto> descriptions;
     private List<QuestionInsertRequestDto> questions;
 
     private String mode;
