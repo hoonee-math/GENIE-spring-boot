@@ -27,22 +27,12 @@ public class PassageEntity {
     @Column(name = "pas_code") // ✅ 소문자
     private Long pasCode;
 
-    @Column(name = "pas_type")
-    private String pasType;
-
-    @Column(name = "pas_keyword")
-    private String keyword;
-
     @Column(name = "pas_title", columnDefinition = "LONGTEXT")
     private String title;
 
     @Lob
     @Column(name = "pas_content", columnDefinition = "LONGTEXT")
     private String content;
-
-    @Lob
-    @Column(name = "pas_gist", columnDefinition = "LONGTEXT")
-    private String gist;
 
     @Column(name = "pas_date")
     private LocalDateTime date;
@@ -64,4 +54,8 @@ public class PassageEntity {
     @JsonIgnore
     @OneToMany(mappedBy = "passage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuestionEntity> questions;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "passage", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DescriptionEntity> descriptions;
 }

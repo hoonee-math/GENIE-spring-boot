@@ -34,6 +34,10 @@ public class DescriptionEntity {
     @Column(name = "pas_gist", columnDefinition = "LONGTEXT")
     private String gist;
 
+    @Column(name = "pas_order")
+    @Builder.Default
+    private int order=1;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pas_code") // ✅ FK도 소문자
