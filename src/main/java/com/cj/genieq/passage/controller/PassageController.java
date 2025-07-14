@@ -60,11 +60,16 @@ public class PassageController {
     public ResponseEntity<?> updatePassage(@RequestBody PassageUpdateRequestDto passageDto) {
         try {
             // 지문 수정 및 업데이트된 지문 정보 반환
-            PassageSelectResponseDto updatedPassage = passageService.updatePassage(passageDto);
-            return ResponseEntity.ok(updatedPassage);
+            boolean success = passageService.updatePassage(passageDto);
+            if (success) {
+                return ResponseEntity.ok("수정 완료");
+            } else {
+                return ResponseEntity.badRequest().body("수정 실패");
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("지문이 존재하지 않습니다.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("지문 수정 실패");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("지문 수정 실패");
         }
     }
 

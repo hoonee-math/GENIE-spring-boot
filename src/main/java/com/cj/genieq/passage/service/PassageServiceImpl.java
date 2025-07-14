@@ -113,63 +113,51 @@ public class PassageServiceImpl implements PassageService {
     // 지문 수정
     @Override
     @Transactional
-    public PassageSelectResponseDto updatePassage(PassageUpdateRequestDto passageDto) {
-        // 1. 기존 지문 조회
-        PassageEntity passage = passageRepository.findById(passageDto.getPasCode())
-                .orElseThrow(() -> new EntityNotFoundException("지문이 존재하지 않습니다."));
+    public boolean updatePassage(PassageUpdateRequestDto passageDto) {
+        try {
+            // 1. 기존 지문 조회
+            PassageEntity passage = passageRepository.findById(passageDto.getPasCode())
+                    .orElseThrow(() -> new EntityNotFoundException("지문이 존재하지 않습니다."));
 
-        // 2. 제목 수정이 발생한 경우에만 중복 검사 실행
-        String title = passage.getTitle(); // 기존 제목 유지
-        if (passageDto.getTitle() != null && !passage.getTitle().equals(passageDto.getTitle())) {
-            // 제목이 수정된 경우에만 중복 검사 실행
-            title = generateTitle(passageDto.getTitle());
+            // 2. Passage 기본 정보만 수정 / 제목 수정이 발생한 경우에만 중복 검사 실행
+            if (passageDto.getTitle() != null && !passageDto.getTitle().equals(passage.getTitle())) {
+                passage.setTitle(generateTitle(passageDto.getTitle()));
+            }
+            if (passageDto.getContent() != null) {
+                passage.setContent(passageDto.getContent());
+            }
+            passage.setDate(LocalDateTime.now());
+
+            // 3. 저장
+            passageRepository.save(passage);
+
+            // 4. 단순 성공 응답
+            return true;
+
+        } catch (EntityNotFoundException e) {
+            return false;
         }
-
-        // 3. 기존 지문 정보 수정
-        passage.setTitle(title);
-        passage.setContent(passageDto.getContent());
-        passage.setDate(LocalDateTime.now());
-
-        // 4. 지문 수정 후 저장
-        PassageEntity updatedPassage = passageRepository.save(passage);
-
-        // 5. 응답용 DTO 생성
-        return PassageSelectResponseDto.builder()
-                .pasCode(updatedPassage.getPasCode())
-                .title(updatedPassage.getTitle())
-                .pasType(updatedPassage.getPasType())
-                .keyword(updatedPassage.getKeyword())
-                .content(updatedPassage.getContent())
-                .gist(updatedPassage.getGist())
-                .build();
     }
-
 
     // 지문 미리보기 리스트
     @Override
     public List<PassagePreviewListDto> getPreviewList(Long memCode) {
-        List<PassageEntity> passages = passageRepository.findGeneratedPassagesByMember(memCode);
+        List<PassagePreviewListDto> previews = passageRepository.findPassagePreviewsByMember(memCode, null);
 
-        if (passages.isEmpty()) {
+        if (previews.isEmpty()) {
             throw new EntityNotFoundException("지문이 존재하지 않습니다.");
         }
 
-        List<PassagePreviewListDto> previews = passages.stream()
-                .map(passage -> {
-                    // date가 null인 경우 기본값 처리 (예시로 현재 날짜)
-                    LocalDate date = passage.getDate() != null ? passage.getDate().toLocalDate() : LocalDate.now();
+        return previews;
+    }
+    // 지문 미리보기 즐겨찾기 리스트
+    @Override
+    public List<PassagePreviewListDto> getPreviewFavoriteList(Long memCode) {
+        List<PassagePreviewListDto> previews = passageRepository.findPassagePreviewsByMember(memCode, 1);
 
-                    return PassagePreviewListDto.builder()
-                            .passageCode(passage.getPasCode())  // 지문 코드
-                            .passageTitle(passage.getTitle())   // 지문 제목
-                            .subjectKeyword(passage.getKeyword()) // 지문 키워드
-                            .date(date) // 날짜 처리
-                            .content(passage.getContent())
-                            .gist(passage.getGist())
-                            .favorite(passage.getIsFavorite()) // 즐겨찾기 상태
-                            .build();
-                })
-                .collect(Collectors.toList());
+        if (previews.isEmpty()) {
+            throw new EntityNotFoundException("지문이 존재하지 않습니다.");
+        }
 
         return previews;
     }

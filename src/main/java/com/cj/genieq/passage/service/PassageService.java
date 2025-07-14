@@ -18,8 +18,9 @@ import java.util.List;
 public interface PassageService {
     PassageSelectResponseDto savePassage(Long memCode, PassageInsertRequestDto passageDto);
     PassageFavoriteResponseDto favoritePassage(PassageFavoriteRequestDto requestDto);
-    PassageSelectResponseDto updatePassage(PassageUpdateRequestDto passageDto);
+    boolean updatePassage(PassageUpdateRequestDto passageDto);
     List<PassagePreviewListDto> getPreviewList(Long memCode);
+    List<PassagePreviewListDto> getPreviewFavoriteList(Long memCode);
     PassageSelectResponseDto selectPassage(Long pasCode);
 
     PassageWithQuestionsResponseDto savePassageWithQuestions(Long memCode, PassageWithQuestionsRequestDto requestDto);

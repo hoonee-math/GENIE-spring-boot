@@ -1,6 +1,7 @@
 package com.cj.genieq.passage.repository;
 
 import com.cj.genieq.member.entity.MemberEntity;
+import com.cj.genieq.passage.dto.response.PassagePreviewListDto;
 import com.cj.genieq.passage.entity.PassageEntity;
 import com.itextpdf.commons.utils.JsonUtil;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -84,4 +85,14 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
             " WHERE p.member.memCode = :memCode " +
             "   AND p.isDeleted = 1")
     List<PassageEntity> findDeletedByMember(@Param("memCode") Long memCode);
+
+    @Query("SELECT new com.cj.genieq.passage.dto.response.PassagePreviewListDto(" +
+            "p.pasCode, p.title, p.content) " +
+            "FROM PassageEntity p " +
+            "WHERE p.member.memCode = :memCode AND p.isGenerated = 1 AND p.isDeleted = 0 " +
+            "AND (:isFavorite IS NULL OR p.isFavorite = :isFavorite) " +
+            "ORDER BY p.date DESC " +
+            "LIMIT 10")
+    List<PassagePreviewListDto> findPassagePreviewsByMember(@Param("memCode") Long memCode,
+                                                            @Param("isFavorite") Integer isFavorite);
 }
