@@ -328,14 +328,23 @@ public class PassageServiceImpl implements PassageService {
                 .collect(Collectors.toList())
                 : new ArrayList<>();
 
-        // 3. 응답 DTO 생성 후 반환 값 변수에 저장
+        // 3. DescriptionEntity -> DescriptionDto 변환
+        List<DescriptionEntity> descriptions = descriptionRepository.findByPassage_PasCodeOrderByOrderAsc(pasCode);
+        List<DescriptionDto> descriptionDtos = descriptions.stream()
+                .map(desc -> DescriptionDto.builder()
+                        .pasType(desc.getPasType())
+                        .keyword(desc.getKeyword())
+                        .gist(desc.getGist())
+                        .order(desc.getOrder())
+                        .build())
+                .collect(Collectors.toList());
+
+        // 4. 응답 DTO 생성 후 반환 값 변수에 저장
         PassageWithQuestionsResponseDto result = PassageWithQuestionsResponseDto.builder()
                 .pasCode(passage.getPasCode())
-                .pasType(passage.getPasType())
-                .keyword(passage.getKeyword())
                 .title(passage.getTitle())
                 .content(passage.getContent())
-                .gist(passage.getGist())
+                .descriptions(descriptionDtos)
                 .questions(questions) // 문항이 없을 경우 빈 리스트 반환
                 .build();
 
@@ -416,7 +425,7 @@ public class PassageServiceImpl implements PassageService {
             if ("generate".equals(requestDto.getMode()) || "recreate".equals(requestDto.getMode())) {
                 usageService.updateUsage(memCode, -1, "문항 생성");
             }
-    
+
             // 8. Description 엔티티를 DTO로 변환
             List<DescriptionDto> descriptionDtos = savedDescriptions.stream()
                     .map(desc -> DescriptionDto.builder()
@@ -463,8 +472,6 @@ public class PassageServiceImpl implements PassageService {
         List<PassageStorageEachResponseDto> passages = passageEntities.stream()
                 .map(p -> PassageStorageEachResponseDto.builder()
                         .title(p.getTitle())
-                        .pasType(p.getPasType())
-                        .keyword(p.getKeyword())
                         .isGenerated(p.getIsGenerated())
                         .date(p.getDate().toLocalDate())
                         .isFavorite(p.getIsFavorite())
@@ -488,9 +495,7 @@ public class PassageServiceImpl implements PassageService {
                 .filter(p -> p.getIsDeleted() == 0) // isDeleted = 0 필터링
                 .map(p -> PassageStorageEachResponseDto.builder()
                         .pasCode(p.getPasCode())
-                        .pasType(p.getPasType())
                         .title(p.getTitle())
-                        .keyword(p.getKeyword())
                         .isGenerated(p.getIsGenerated())
                         .date(p.getDate().toLocalDate())
                         .isFavorite(p.getIsFavorite())
@@ -515,9 +520,7 @@ public class PassageServiceImpl implements PassageService {
                 .filter(p -> p.getIsDeleted() == 0) // isDeleted = 0 필터링
                 .map(p -> PassageStorageEachResponseDto.builder()
                         .pasCode(p.getPasCode())
-                        .pasType(p.getPasType())
                         .title(p.getTitle())
-                        .keyword(p.getKeyword())
                         .isGenerated(p.getIsGenerated())
                         .date(p.getDate().toLocalDate())
                         .isFavorite(p.getIsFavorite())
@@ -595,9 +598,7 @@ public class PassageServiceImpl implements PassageService {
         List<PassageStorageEachResponseDto> passages = entities.stream()
                 .map(p -> PassageStorageEachResponseDto.builder()
                         .pasCode(p.getPasCode())
-                        .pasType(p.getPasType())
                         .title(p.getTitle())
-                        .keyword(p.getKeyword())
                         .isGenerated(p.getIsGenerated())
                         .date(p.getDate().toLocalDate())
                         .isFavorite(p.getIsFavorite())
