@@ -1,9 +1,12 @@
 package com.cj.genieq.passage.dto.response;
 
+import com.cj.genieq.passage.dto.DescriptionDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @AllArgsConstructor
 @Builder
@@ -12,8 +15,6 @@ import lombok.NoArgsConstructor;
 public class PassageSelectResponseDto {
     private Long pasCode;
     private String title;
-    private String pasType; // 인문, 과학, 예술, 사회, 기술, 독서론
-    private String keyword;
     private String content;
-    private String gist;
+    private List<DescriptionDto> descriptions;
 }
