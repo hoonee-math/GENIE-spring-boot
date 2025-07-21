@@ -22,7 +22,7 @@ public class QuestionServiceImpl implements QuestionService {
         List<QuestionEntity> questionEntities = questions.stream()
                 .map(q -> QuestionEntity.builder()
                         .queQuery(q.getQueQuery())
-                        .queOption(String.join(",", q.getQueOption())) // JSON → String 변환 후 저장
+                        .queOption(q.getQueOption())
                         .queAnswer(q.getQueAnswer())
                         .queDescription(q.getDescription())
                         .passage(savedPassage) // 지문 코드 매핑
@@ -37,7 +37,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .map(q -> QuestionSelectResponseDto.builder()
                         .queCode(q.getQueCode())
                         .queQuery(q.getQueQuery())
-                        .queOption(List.of(q.getQueOption().split(",")))
+                        .queOption(q.getQueOption())
                         .queAnswer(q.getQueAnswer())
                         .description(q.getQueDescription())
                         .build())
@@ -53,7 +53,7 @@ public class QuestionServiceImpl implements QuestionService {
         List<QuestionEntity> newQuestions = questions.stream()
                 .map(q -> QuestionEntity.builder()
                         .queQuery(q.getQueQuery())
-                        .queOption(String.join(",", q.getQueOption()))
+                        .queOption(q.getQueOption())
                         .queAnswer(q.getQueAnswer())
                         .passage(passage) // 지문 매핑
                         .queDescription(q.getDescription())
@@ -67,7 +67,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .map(q -> QuestionSelectResponseDto.builder()
                         .queCode(q.getQueCode())
                         .queQuery(q.getQueQuery())
-                        .queOption(List.of(q.getQueOption().split(",")))
+                        .queOption(q.getQueOption())
                         .queAnswer(q.getQueAnswer())
                         .description(q.getQueDescription())
                         .build())

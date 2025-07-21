@@ -16,7 +16,7 @@ import java.util.List;
 public class QuestionInsertRequestDto {
     private Long queCode;
     private String queQuery; //질문
-    private List<String> queOption; //보기
+    private String queOption; //보기
     private String queAnswer; //정답
     private String description; //해설
 }

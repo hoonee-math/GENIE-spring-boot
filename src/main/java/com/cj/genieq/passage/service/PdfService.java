@@ -266,7 +266,8 @@ public class PdfService {
                         float optionY = yPosition - 30;
                         String[] optionNums = {"①","②","③","④","⑤"};
                         int optionNum = 0;
-                        for (String option : question.getQueOption()) {
+                        // queOption 을 리스트에서 String Tiptap 방식으로 변경하게되면서 수정.
+                        for (String option : question.getQueOption().split("</p>")) {
                             String prefix = (optionNum < optionNums.length) ? optionNums[optionNum] : String.valueOf(optionNum + 1) + ". ";
 
                             questionStream.beginText();

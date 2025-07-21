@@ -36,7 +36,8 @@ public class TxtService {
 
                 String[] optionNums = {"①","②","③","④","⑤"};
                 int optionNum = 0;
-                for (String option : question.getQueOption()) {
+                // queOption 을 리스트에서 String Tiptap 방식으로 변경하게되면서 수정.
+                for (String option : question.getQueOption().split("</p>")) {
                     String prefix = optionNums[optionNum];
                     sb.append(prefix).append(" ").append(stripHtmlTags(option)).append("\n");
                     optionNum++;

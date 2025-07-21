@@ -95,7 +95,8 @@ public class WordService {
                     // ✅ 선택지 출력
                     String[] optionNums = {"①","②","③","④","⑤"};
                     int optionNum = 0;
-                    for (String option : question.getQueOption()) {
+                    // queOption 을 리스트에서 String Tiptap 방식으로 변경하게되면서 수정.
+                    for (String option : question.getQueOption().split("</p>")) {
                         XWPFParagraph optionParagraph = document.createParagraph();
                         optionParagraph.setIndentationLeft(500); // 들여쓰기
                         XWPFRun optionRun = optionParagraph.createRun();
