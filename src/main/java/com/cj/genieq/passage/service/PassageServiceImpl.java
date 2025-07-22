@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -146,14 +147,47 @@ public class PassageServiceImpl implements PassageService {
     // 지문 미리보기 리스트
     @Override
     public List<PassagePreviewListDto> getPreviewList(Long memCode) {
+        // 1. 기본 지문 정보 조회
         List<PassagePreviewListDto> previews = passageRepository.findPassagePreviewsByMember(memCode, null);
 
         if (previews.isEmpty()) {
             throw new EntityNotFoundException("지문이 존재하지 않습니다.");
         }
 
+        // 2. pasCode 목록 추출
+        List<Long> pasCodes = previews.stream()
+                .map(PassagePreviewListDto::getPasCode)
+                .collect(Collectors.toList());
+
+        // 3. Description 정보 조회
+        List<DescriptionEntity> descriptions = passageRepository.findDescriptionsByPassageCodes(pasCodes);
+
+        // 4. Description을 pasCode별로 그룹화
+        Map<Long, List<DescriptionDto>> descriptionMap = descriptions.stream()
+                .collect(Collectors.groupingBy(
+                        desc -> desc.getPassage().getPasCode(),
+                        // DescriptionEntity를 DescriptionDto로 변환하는 헬퍼 메소드 호출
+                        Collectors.mapping(this::convertToDescriptionDto, Collectors.toList())
+                ));
+
+        // 5. 각 preview에 Description 매핑
+        previews.forEach(preview -> {
+            List<DescriptionDto> descList = descriptionMap.getOrDefault(preview.getPasCode(), new ArrayList<>());
+            preview.setDescriptions(descList);
+        });
+
         return previews;
     }
+    // DescriptionEntity를 DescriptionDto로 변환하는 헬퍼 메소드
+    private DescriptionDto convertToDescriptionDto(DescriptionEntity entity) {
+        return DescriptionDto.builder()
+                .pasType(entity.getPasType())
+                .keyword(entity.getKeyword())
+                .gist(entity.getGist())
+                .order(entity.getOrder())
+                .build();
+    }
+
     // 지문 미리보기 즐겨찾기 리스트
     @Override
     public List<PassagePreviewListDto> getPreviewFavoriteList(Long memCode) {
