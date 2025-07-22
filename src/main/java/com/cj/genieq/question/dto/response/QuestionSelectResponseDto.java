@@ -19,4 +19,5 @@ public class QuestionSelectResponseDto {
     private String queOption;
     private String queAnswer;
     private String description; //해설
+    private String queSubpassage; //박스형 보기에 들어가는 글
 }

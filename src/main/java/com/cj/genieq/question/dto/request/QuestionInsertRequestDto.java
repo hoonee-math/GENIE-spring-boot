@@ -16,7 +16,8 @@ import java.util.List;
 public class QuestionInsertRequestDto {
     private Long queCode;
     private String queQuery; //질문
-    private String queOption; //보기
+    private String queOption; //선택지
     private String queAnswer; //정답
     private String description; //해설
+    private String queSubpassage; //박스형 보기에 들어가는 글
 }

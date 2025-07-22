@@ -40,6 +40,7 @@ public class QuestionServiceImpl implements QuestionService {
                     .queOption(requestDto.getQueOption())
                     .queAnswer(requestDto.getQueAnswer())
                     .queDescription(requestDto.getDescription())
+                    .queSubpassage(requestDto.getQueSubpassage())
                     .passage(existingPassage)
                     .build();
 
@@ -69,6 +70,7 @@ public class QuestionServiceImpl implements QuestionService {
                         .queOption(q.getQueOption())
                         .queAnswer(q.getQueAnswer())
                         .queDescription(q.getDescription())
+                        .queSubpassage(q.getQueSubpassage())
                         .passage(savedPassage) // 지문 코드 매핑
                         .build())
                 .collect(Collectors.toList());
@@ -84,6 +86,7 @@ public class QuestionServiceImpl implements QuestionService {
                         .queOption(q.getQueOption())
                         .queAnswer(q.getQueAnswer())
                         .description(q.getQueDescription())
+                        .queSubpassage(q.getQueSubpassage())
                         .build())
                 .collect(Collectors.toList());
     }

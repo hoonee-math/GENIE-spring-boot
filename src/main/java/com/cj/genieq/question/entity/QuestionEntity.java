@@ -36,6 +36,10 @@ public class QuestionEntity {
     private String queAnswer;
 
     @Lob
+    @Column(name = "que_subpassage", columnDefinition = "LONGTEXT")
+    private String queSubpassage;
+
+    @Lob
     @Column(name = "que_description", columnDefinition = "LONGTEXT")
     private String queDescription;
 
