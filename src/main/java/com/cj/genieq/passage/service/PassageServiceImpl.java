@@ -9,8 +9,11 @@ import com.cj.genieq.passage.entity.DescriptionEntity;
 import com.cj.genieq.passage.entity.PassageEntity;
 import com.cj.genieq.passage.repository.DescriptionRepository;
 import com.cj.genieq.passage.repository.PassageRepository;
+import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
 import com.cj.genieq.question.dto.request.QuestionUpdateRequestDto;
 import com.cj.genieq.question.dto.response.QuestionSelectResponseDto;
+import com.cj.genieq.question.entity.QuestionEntity;
+import com.cj.genieq.question.repository.QuestionRepository;
 import com.cj.genieq.question.service.QuestionService;
 import com.cj.genieq.usage.service.UsageService;
 import jakarta.persistence.EntityNotFoundException;
@@ -35,6 +38,7 @@ public class PassageServiceImpl implements PassageService {
     private final DescriptionRepository descriptionRepository;
     private final UsageService usageService;
     private final QuestionService questionService;
+    private final QuestionRepository questionRepository;
 
     // 지문 저장
     @Override

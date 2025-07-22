@@ -1,13 +1,17 @@
 package com.cj.genieq.question.service;
 
 import com.cj.genieq.passage.entity.PassageEntity;
+import com.cj.genieq.passage.repository.PassageRepository;
 import com.cj.genieq.question.dto.request.QuestionUpdateRequestDto;
 import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
 import com.cj.genieq.question.dto.response.QuestionSelectResponseDto;
 import com.cj.genieq.question.entity.QuestionEntity;
 import com.cj.genieq.question.repository.QuestionRepository;
+import com.cj.genieq.usage.service.UsageService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,6 +20,46 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepository;
+    private final PassageRepository passageRepository;
+    private final UsageService usageService;
+
+    // 문항만 추가
+    @Transactional
+    public QuestionEntity addQuestionToExistingPassage(Long memCode, Long pasCode, QuestionInsertRequestDto requestDto) {
+        try {
+            // 1. 기존 지문 조회
+            PassageEntity existingPassage = passageRepository.findById(pasCode)
+                    .orElseThrow(() -> new EntityNotFoundException("지문을 찾을 수 없습니다: " + pasCode));
+
+            // 2. 권한 확인 (해당 사용자의 지문인지)
+            if (!existingPassage.getMember().getMemCode().equals(memCode)) {
+                throw new IllegalAccessException("해당 지문에 대한 권한이 없습니다.");
+            }
+            QuestionEntity question = QuestionEntity.builder()
+                    .queQuery(requestDto.getQueQuery())
+                    .queOption(requestDto.getQueOption())
+                    .queAnswer(requestDto.getQueAnswer())
+                    .queDescription(requestDto.getDescription())
+                    .passage(existingPassage)
+                    .build();
+
+            // 4. 새로운 문항 저장
+            QuestionEntity savedQuestion = questionRepository.save(question);
+
+            // 5. 사용량 기록 (문항 생성)
+            usageService.updateUsage(memCode, -1, "문항 추가");
+
+            // 6. 업데이트된 전체 데이터 반환
+            return savedQuestion;
+
+        } catch (EntityNotFoundException e) {
+            throw e;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("권한이 없습니다: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("문항 추가 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 
     // 문항 저장 로직 이동
     public List<QuestionSelectResponseDto> saveQuestions(PassageEntity savedPassage, List<QuestionInsertRequestDto> questions) {

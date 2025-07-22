@@ -8,6 +8,10 @@ import com.cj.genieq.passage.service.PassageService;
 import com.cj.genieq.passage.service.PdfService;
 import com.cj.genieq.passage.service.TxtService;
 import com.cj.genieq.passage.service.WordService;
+import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
+import com.cj.genieq.question.dto.response.QuestionSelectResponseDto;
+import com.cj.genieq.question.entity.QuestionEntity;
+import com.cj.genieq.question.service.QuestionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -33,6 +37,7 @@ public class PassageController {
     private final PdfService pdfService;
     private final WordService wordService;
     private final TxtService txtService;
+    private final QuestionService questionService;
 
     /**
      * 지문 개별 저장 API (JWT 기반)
@@ -134,6 +139,25 @@ public class PassageController {
         PassageWithQuestionsResponseDto responseDto = passageService.savePassageWithQuestions(member.getMemCode(), requestDto);
 
         return ResponseEntity.ok(responseDto);
+    }
+
+    // 기존 pasCode에 추가되는 문항을 저장
+    @PostMapping("/ques/add/{pasCode}")
+    public ResponseEntity<?> addQuestionToPassage(@AuthenticationPrincipal AuthenticatedMemberDto member,@PathVariable Long pasCode, @RequestBody QuestionInsertRequestDto requestDto) {
+        System.out.println("request passage data: " + requestDto.toString());
+        try{
+            // 기존 지문에 새 문항만 추가하는 로직, 저장한 데이터의 QueCode 값을 응답해줌
+            QuestionEntity responseData = questionService.addQuestionToExistingPassage(member.getMemCode(), pasCode, requestDto);
+            return ResponseEntity.ok(responseData);
+        }catch (EntityNotFoundException e) {
+            // requestDto.pasCode 가 없을 경우
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("지문을 찾을 수 없습니다.");
+        } catch (Exception e) {
+            // 기타 예외 처리 (예기치 않은 오류)
+            e.printStackTrace();  // 로깅용
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+        }
+
     }
 
     // 지문 + 문항 조회
