@@ -328,6 +328,7 @@ public class PassageServiceImpl implements PassageService {
                         .queOption(q.getQueOption())
                         .queAnswer(q.getQueAnswer())
                         .description(q.getQueDescription())
+                        .queSubpassage(q.getQueSubpassage())
                         .build())
                 .collect(Collectors.toList())
                 : new ArrayList<>();
