@@ -52,7 +52,7 @@ import java.util.List;
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", 
                                    "/swagger-resources/**", "/configuration/**").permitAll() // Swagger UI
                     .requestMatchers("/api/test/**").permitAll() // 테스트 API
-                    .requestMatchers("/api/auth/select/login", "/api/auth/signup", "/api/auth/refresh").permitAll() // 로그인/회원가입/토큰갱신
+                    .requestMatchers("/api/auth/select/login", "/api/auth/insert/signup", "/api/auth/refresh").permitAll() // 로그인/회원가입/토큰갱신
                     .requestMatchers("/api/auth/select/logout").permitAll() // 로그아웃 요청
                     .requestMatchers("/api/auth/select/email", "/api/auth/update/temporal").permitAll() // 이메일 확인/임시 비밀번호
                     .requestMatchers("/api/noti/**").permitAll() // 공지사항은 누구나 조회 가능
