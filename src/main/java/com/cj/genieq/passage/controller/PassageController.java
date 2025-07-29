@@ -27,6 +27,7 @@ import org.springframework.dao.DataAccessException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pass")
@@ -177,6 +178,28 @@ public class PassageController {
         PassageWithQuestionsResponseDto updatedPassage = passageService.updatePassage(member.getMemCode(), pasCode, requestDto);
         return ResponseEntity.ok(updatedPassage);
 
+    }
+
+    // 지문 데이터 수정 Patch 를 사용 (PUT은 리소스 전체를 대체하는 반면, PATCH는 리소스의 일부만 수정)
+    @PatchMapping("/{pasCode}")
+    public ResponseEntity<?> updatePassagePartial(
+            @AuthenticationPrincipal AuthenticatedMemberDto member,
+            @PathVariable Long pasCode,
+            @RequestBody PassagePartialUpdateRequestDto updateDto
+    ) {
+        try {
+            // System.out.println("request passage data: " + updateDto.toString());
+            boolean success = passageService.updatePassagePartial(member.getMemCode(), pasCode, updateDto);
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "수정 완료", "success", true));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("message", "수정 실패", "success", false));
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "지문을 찾을 수 없습니다.", "success", false));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "서버 오류가 발생했습니다.", "success", false));
+        }
     }
 
     // 자료실 메인화면 리스트(즐겨찾기+최근 작업)

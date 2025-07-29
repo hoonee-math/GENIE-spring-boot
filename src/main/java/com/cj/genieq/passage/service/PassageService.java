@@ -28,6 +28,7 @@ public interface PassageService {
     PassageWithQuestionsResponseDto savePassageWithQuestions(Long memCode, PassageWithQuestionsRequestDto requestDto);
     PassageWithQuestionsResponseDto getPassageWithQuestions(Long pasCode);
     PassageWithQuestionsResponseDto updatePassage(Long memCode, Long pasCode, PassageWithQuestionsRequestDto requestDto);
+    boolean updatePassagePartial(Long memCode, Long pasCode, PassagePartialUpdateRequestDto updateDto);
 
     List<PassageStorageEachResponseDto> selectPassageListInStorage(Long memCode, Integer isFavorite, Integer rownum);
     List<PassageStorageEachResponseDto> selectFavoriteList(Long memCode);

@@ -12,10 +12,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
+import java.util.Optional;
 
 @Repository
 public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
+
+    // 권한 확인용 메서드
+    Optional<PassageEntity> findByPasCodeAndMember_MemCode(Long pasCode, Long memCode);
 
     @Query(value = """
         SELECT * FROM passage p

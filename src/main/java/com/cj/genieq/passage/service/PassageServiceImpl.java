@@ -18,6 +18,7 @@ import com.cj.genieq.question.service.QuestionService;
 import com.cj.genieq.usage.service.UsageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PassageServiceImpl implements PassageService {
@@ -140,6 +142,38 @@ public class PassageServiceImpl implements PassageService {
             return true;
 
         } catch (EntityNotFoundException e) {
+            return false;
+        }
+    }
+
+    // 지문 수정 PATCH 일부 데이터 수정 비즈니스 로직
+    @Override
+    @Transactional
+    public boolean updatePassagePartial(Long memCode, Long pasCode, PassagePartialUpdateRequestDto updateDto) {
+        try {
+            // 지문 조회 및 권한 확인
+            PassageEntity passage = passageRepository.findByPasCodeAndMember_MemCode(pasCode, memCode)
+                    .orElseThrow(() -> new EntityNotFoundException("지문을 찾을 수 없거나 권한이 없습니다."));
+
+            // null이 아닌 필드만 업데이트 (JPA Dirty Checking 활용)
+            if (updateDto.getTitle() != null) {
+                passage.setTitle(updateDto.getTitle());
+            }
+
+            if (updateDto.getContent() != null) {
+                passage.setContent(updateDto.getContent());
+            }
+
+            if (updateDto.getIsFavorite() != null) {
+                passage.setIsFavorite(updateDto.getIsFavorite());
+            }
+
+            // JPA가 자동으로 변경된 필드만 UPDATE 쿼리 실행
+            // repository.save() 호출 불필요 (@Transactional + Dirty Checking)
+
+            return true;
+        } catch (Exception e) {
+            log.error("지문 부분 수정 실패: {}", e.getMessage());
             return false;
         }
     }
