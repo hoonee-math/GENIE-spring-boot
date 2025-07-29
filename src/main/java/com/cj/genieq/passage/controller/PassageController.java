@@ -104,10 +104,10 @@ public class PassageController {
 
     // 지문 개별 조회
     @GetMapping("/select/{pasCode}")
-    public ResponseEntity<?> selectPassage(@PathVariable Long pasCode) {
+    public ResponseEntity<?> selectPassage(@AuthenticationPrincipal AuthenticatedMemberDto member, @PathVariable Long pasCode) {
         try {
             // PassageService에서 지문 정보를 조회
-            PassageSelectResponseDto passage = passageService.selectPassage(pasCode);
+            PassageSelectResponseDto passage = passageService.selectPassage(member.getMemCode(), pasCode);
 
             // 지문이 존재하지 않으면 예외 처리
             if (passage == null) {

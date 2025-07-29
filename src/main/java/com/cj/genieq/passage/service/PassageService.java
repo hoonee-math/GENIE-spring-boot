@@ -23,7 +23,7 @@ public interface PassageService {
     boolean updatePassage(PassageUpdateRequestDto passageDto);
     List<PassagePreviewListDto> getPreviewList(Long memCode);
     List<PassagePreviewListDto> getPreviewFavoriteList(Long memCode);
-    PassageSelectResponseDto selectPassage(Long pasCode);
+    PassageSelectResponseDto selectPassage(Long memCode, Long pasCode);
 
     PassageWithQuestionsResponseDto savePassageWithQuestions(Long memCode, PassageWithQuestionsRequestDto requestDto);
     PassageWithQuestionsResponseDto getPassageWithQuestions(Long pasCode);

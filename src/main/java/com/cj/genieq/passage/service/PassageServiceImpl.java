@@ -236,32 +236,40 @@ public class PassageServiceImpl implements PassageService {
 
     // 지문 개별 조회
     @Override
-    public PassageSelectResponseDto selectPassage(Long pasCode) {
-        PassageEntity passageEntity = passageRepository.findById(pasCode)
-                .orElseThrow(() -> new IllegalArgumentException("지문이 존재하지 않습니다."));
+    public PassageSelectResponseDto selectPassage(Long memCode, Long pasCode) {
+//        PassageEntity passageEntity = passageRepository.findById(pasCode)
+//                .orElseThrow(() -> new IllegalArgumentException("지문이 존재하지 않습니다."));
+        try {
+            // 지문 조회 및 권한 확인
+            PassageEntity passageEntity = passageRepository.findByPasCodeAndMember_MemCode(pasCode, memCode)
+                    .orElseThrow(() -> new EntityNotFoundException("지문을 찾을 수 없거나 권한이 없습니다."));
 
-        // 2. 연관된 Description들 조회 (순서대로)
-        List<DescriptionEntity> descriptions = descriptionRepository.findByPassage_PasCodeOrderByOrderAsc(pasCode);
+            // 2. 연관된 Description들 조회 (순서대로)
+            List<DescriptionEntity> descriptions = descriptionRepository.findByPassage_PasCodeOrderByOrderAsc(pasCode);
 
-        // 3. DescriptionEntity -> DescriptionDto 변환
-        List<DescriptionDto> descriptionDtos = descriptions.stream()
-                .map(desc -> DescriptionDto.builder()
-                        .pasType(desc.getPasType())
-                        .keyword(desc.getKeyword())
-                        .gist(desc.getGist())
-                        .order(desc.getOrder())
-                        .build())
-                .collect(Collectors.toList());
+            // 3. DescriptionEntity -> DescriptionDto 변환
+            List<DescriptionDto> descriptionDtos = descriptions.stream()
+                    .map(desc -> DescriptionDto.builder()
+                            .pasType(desc.getPasType())
+                            .keyword(desc.getKeyword())
+                            .gist(desc.getGist())
+                            .order(desc.getOrder())
+                            .build())
+                    .collect(Collectors.toList());
 
-        // 4. 응답 DTO 생성
-        PassageSelectResponseDto passage =  PassageSelectResponseDto.builder()
-                .pasCode(passageEntity.getPasCode())
-                .title(passageEntity.getTitle())
-                .content(passageEntity.getContent())
-                .descriptions(descriptionDtos)  // Description 리스트 포함
-                .build();
+            // 4. 응답 DTO 생성
+            PassageSelectResponseDto passage =  PassageSelectResponseDto.builder()
+                    .pasCode(passageEntity.getPasCode())
+                    .title(passageEntity.getTitle())
+                    .content(passageEntity.getContent())
+                    .descriptions(descriptionDtos)  // Description 리스트 포함
+                    .build();
 
-        return passage;
+            return passage;
+        } catch (Exception e) {
+            log.error("지문 조회 실패: {}", e.getMessage());
+            return null;
+        }
 
     }
 
