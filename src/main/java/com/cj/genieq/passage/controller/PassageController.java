@@ -9,6 +9,7 @@ import com.cj.genieq.passage.service.PdfService;
 import com.cj.genieq.passage.service.TxtService;
 import com.cj.genieq.passage.service.WordService;
 import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
+import com.cj.genieq.question.dto.request.QuestionPartialUpdateRequestDto;
 import com.cj.genieq.question.dto.response.QuestionSelectResponseDto;
 import com.cj.genieq.question.entity.QuestionEntity;
 import com.cj.genieq.question.service.QuestionService;
@@ -198,6 +199,31 @@ public class PassageController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "지문을 찾을 수 없습니다.", "success", false));
         } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "서버 오류가 발생했습니다.", "success", false));
+        }
+    }
+
+    // 문항 데이터 수정 Patch 를 사용 (PUT은 리소스 전체를 대체하는 반면, PATCH는 리소스의 일부만 수정)
+    @PatchMapping("/{pasCode}/ques/{queCode}")
+    public ResponseEntity<?> updateQuestionPartial(
+            @AuthenticationPrincipal AuthenticatedMemberDto member,
+            @PathVariable Long pasCode,
+            @PathVariable Long queCode,
+            @RequestBody QuestionPartialUpdateRequestDto updateDto
+    ) {
+        try {
+            System.out.println("문항 데이터 수정 요청 들어옴, updateDto: " + updateDto.toString());
+            boolean success = questionService.updateQuestionPartial(member.getMemCode(), pasCode, queCode, updateDto);
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "문항 수정 완료", "success", true));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("message", "문항 수정 실패", "success", false));
+            }
+        } catch (EntityNotFoundException e) {
+            System.out.println("문항 찾기 실패");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "문항을 찾을 수 없습니다.", "success", false));
+        } catch (Exception e) {
+            System.out.println("서버 오류");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "서버 오류가 발생했습니다.", "success", false));
         }
     }

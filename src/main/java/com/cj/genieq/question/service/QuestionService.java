@@ -2,6 +2,7 @@ package com.cj.genieq.question.service;
 
 import com.cj.genieq.passage.entity.PassageEntity;
 import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
+import com.cj.genieq.question.dto.request.QuestionPartialUpdateRequestDto;
 import com.cj.genieq.question.dto.request.QuestionUpdateRequestDto;
 import com.cj.genieq.question.dto.response.QuestionSelectResponseDto;
 import com.cj.genieq.question.entity.QuestionEntity;
@@ -12,4 +13,5 @@ public interface QuestionService {
     List<QuestionSelectResponseDto> saveQuestions(PassageEntity savedPassage, List<QuestionInsertRequestDto> questions);
     List<QuestionSelectResponseDto> updateQuestions(PassageEntity passage, List<QuestionUpdateRequestDto> questions);
     QuestionEntity addQuestionToExistingPassage(Long memCode, Long pasCode, QuestionInsertRequestDto requestDto);
+    boolean updateQuestionPartial(Long memCode, Long pasCode, Long queCode, QuestionPartialUpdateRequestDto updateDto);
 }

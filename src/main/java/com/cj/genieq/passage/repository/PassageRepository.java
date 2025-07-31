@@ -17,8 +17,10 @@ import java.util.Optional;
 @Repository
 public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
 
-    // 권한 확인용 메서드
+    // 권한 및 Entity 확인용 메서드
     Optional<PassageEntity> findByPasCodeAndMember_MemCode(Long pasCode, Long memCode);
+    // 권한 확인용 메서드
+    boolean existsByPasCodeAndMember_MemCode(Long pasCode, Long memCode);
 
     @Query(value = """
         SELECT * FROM passage p
