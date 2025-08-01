@@ -2,15 +2,14 @@ package com.cj.genieq.tosspay.controller;
 
 import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.payment.service.PaymentService;
-import com.cj.genieq.tosspay.dto.PaymentTempData;
 import com.cj.genieq.tosspay.dto.request.ConfirmPaymentRequestDto;
 import com.cj.genieq.tosspay.dto.request.TossPayRequestDto;
 import com.cj.genieq.tosspay.dto.request.TossWebhookPayload;
 import com.cj.genieq.tosspay.dto.response.TossPayErrorResponse;
-import com.cj.genieq.tosspay.service.PaymentTemporaryStorage;
 import com.cj.genieq.tosspay.service.TossPayService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.util.Map;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -30,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Base64;
-import java.util.Map;
 
 
 @RestController
@@ -38,7 +37,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TossPayController {
     private final ObjectMapper objectMapper;
-    private final PaymentTemporaryStorage paymentTemporaryStorage;
 
     private static final String CONFIRM_URL =
             "https://api.tosspayments.com/v1/payments/confirm";
@@ -49,31 +47,29 @@ public class TossPayController {
 
     private final PaymentService paymentService;
 
-    /**
-     * 결제 금액 임시 저장 (Redis 기반)
-     * 기존 HttpSession 방식에서 Redis 기반으로 전환
-     * JWT 토큰에서 memberCode를 추출하여 보안 강화
-     */
+    //결제 금액 임시 저장
     @PostMapping("/saveAmount")
     public ResponseEntity<?> saveAmount(
             @AuthenticationPrincipal AuthenticatedMemberDto member,
+            HttpSession session,
             @RequestBody TossPayRequestDto tossPayRequestDto) {
-        
+
         try {
-            System.out.println("Redis 기반 결제 임시 저장 요청: " + tossPayRequestDto);
-            
+            // JWT로 인증된 사용자만 결제 초기화 가능
+            System.out.println("JWT 인증된 사용자 결제 초기화: " + member.getMemName() + " (코드: " + member.getMemCode() + ")");
+            System.out.println("토스 검증시 필요한 세션 저장용 결제 정보: "+tossPayRequestDto);
+
             String orderId = tossPayRequestDto.getOrderId();
             String amount = tossPayRequestDto.getAmount();
             Long ticCode = tossPayRequestDto.getTicCode();
-            Long memberCode = member.getMemCode(); // JWT에서 추출한 회원 코드
-            
-            // Redis에 결제 임시 데이터 저장
-            PaymentTempData savedData = paymentTemporaryStorage.savePaymentData(
-                    orderId, amount, ticCode, memberCode
-            );
-            
-            System.out.println("Redis 저장 완료 - orderId: " + orderId + ", memberCode: " + memberCode);
-            
+
+            // 결제 금액 세션 저장
+            session.setAttribute(orderId + "_amount", amount);
+            // ticCode 세션 저장
+            session.setAttribute(orderId + "_ticCode", ticCode);
+            // 보안을 위해 회원 코드도 세션에 저장하여 검증에 사용
+            session.setAttribute(orderId + "_memberCode", member.getMemCode());
+
             return ResponseEntity.ok(Map.of(
                 "message", "결제 임시 데이터 저장 성공", 
                 "success", true,
@@ -90,104 +86,70 @@ public class TossPayController {
         }
     }
 
-    /**
-     * 결제 금액 검증 (Redis 기반)
-     * 기존 HttpSession 방식에서 Redis 기반으로 전환
-     * memberCode 추가 검증으로 보안 강화
-     */
+    //결제 금액 검증
     @PostMapping("/verifyAmount")
     public ResponseEntity<?> verifyAmount(
             @AuthenticationPrincipal AuthenticatedMemberDto member,
+            HttpSession session,
             @RequestBody TossPayRequestDto tossPayRequestDto) {
-        
-        try {
-            System.out.println("Redis 기반 결제 검증 요청: " + tossPayRequestDto);
-            
-            String orderId = tossPayRequestDto.getOrderId();
-            String amount = tossPayRequestDto.getAmount();
-            Long memberCode = member.getMemCode();
-            
-            // Redis에서 결제 데이터 검증
-            boolean isValid = paymentTemporaryStorage.verifyPaymentData(orderId, amount, memberCode);
-            
-            if (!isValid) {
-                System.out.println("결제 검증 실패 - orderId: " + orderId);
-                return ResponseEntity.badRequest()
-                        .body(TossPayErrorResponse.builder()
-                                .code(400)
-                                .message("결제 금액 정보가 유효하지 않습니다.")
-                                .build());
-            }
-            
-            System.out.println("결제 검증 성공 - orderId: " + orderId);
-            return ResponseEntity.ok(Map.of(
-                "message", "결제 데이터 검증 성공",
-                "success", true,
-                "orderId", orderId
-            ));
-            
-        } catch (Exception e) {
-            System.err.println("결제 검증 중 오류: " + e.getMessage());
-            return ResponseEntity.status(500).body(Map.of(
-                "message", "결제 검증 중 오류가 발생했습니다.",
-                "success", false,
-                "error", e.getMessage()
-            ));
+        // JWT로 인증된 사용자만 결제 검증 가능
+        System.out.println("JWT 인증된 사용자 결제 검증: " + member.getMemName() + " (코드: " + member.getMemCode() + ")");
+        System.out.println("검증 요청: " + tossPayRequestDto);
+
+        String orderId = tossPayRequestDto.getOrderId();
+
+        // 세션에서 저장된 정보 조회
+        String savedAmount = (String) session.getAttribute(orderId + "_amount");
+        Long savedMemberCode = (Long) session.getAttribute(orderId + "_memberCode");
+
+        // 결제 금액 검증
+        if (savedAmount == null || !savedAmount.equals(tossPayRequestDto.getAmount())) {
+            session.removeAttribute(orderId + "_amount");
+            session.removeAttribute(orderId + "_memberCode");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "message", "결제 금액 정보가 유효하지 않습니다.",
+                            "success", false
+                    ));
         }
+
+        // 회원 코드 검증 (결제를 시작한 사용자와 검증하는 사용자가 같은지 확인)
+        if (savedMemberCode == null || !savedMemberCode.equals(member.getMemCode())) {
+            session.removeAttribute(orderId + "_amount");
+            session.removeAttribute(orderId + "_memberCode");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of(
+                            "message", "결제 권한이 없습니다.",
+                            "success", false
+                    ));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "결제 금액 검증이 완료되었습니다.",
+                "success", true
+        ));
     }
 
-    /**
-     * 결제 승인 (Redis 기반)
-     * 기존 HttpSession 방식에서 Redis 기반으로 전환
-     * 결제 완료 후 Redis 데이터 자동 정리
-     */
+    //결제 승인
     @PostMapping("/confirm")
     public ResponseEntity<?> confirm(
+            HttpSession session,
             @AuthenticationPrincipal AuthenticatedMemberDto member,
             @RequestBody ConfirmPaymentRequestDto dto
     ) throws Exception {
-        String orderId = dto.getOrderId();
-        
         try {
-            // 1) Redis에서 결제 데이터 조회
-            var optionalPaymentData = paymentTemporaryStorage.getPaymentData(orderId);
-            if (optionalPaymentData.isEmpty()) {
-                System.err.println("결제 승인 실패 - Redis 데이터 없음: " + orderId);
-                return ResponseEntity.badRequest().body(Map.of(
-                    "message", "결제 데이터를 찾을 수 없습니다.",
-                    "success", false,
-                    "orderId", orderId
-                ));
-            }
-            
-            PaymentTempData paymentData = optionalPaymentData.get();
-            
-            // 2) 회원 검증 (보안 강화)
-            if (!member.getMemCode().equals(paymentData.getMemberCode())) {
-                System.err.println("결제 승인 실패 - 회원 불일치: " + orderId);
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "message", "결제 권한이 없습니다.",
-                    "success", false,
-                    "orderId", orderId
-                ));
-            }
-            
-            // 3) 결제 상태를 PROCESSING으로 업데이트
-            paymentTemporaryStorage.updatePaymentStatus(orderId, "PROCESSING");
-            
-            // 4) 토스페이먼츠 승인 요청
+            // 1) 토스페이먼츠 승인 요청
             HttpResponse<String> resp = requestConfirm(dto);
 
             if (resp.statusCode() != 200) {
-                // 실패 시 상태 업데이트
-                paymentTemporaryStorage.updatePaymentStatus(orderId, "FAILED");
+                //상태 코드 그대로 전달, body 문자열(JSON)도 그대로 넘김
                 return ResponseEntity
                         .status(resp.statusCode())
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(resp.body());
             }
 
-            // 5) 토스 응답 JSON 파싱
+            // 2) 토스 응답 JSON 파싱
             JsonNode json = objectMapper.readTree(resp.body());
             String paymentMethod = json.get("method").asText();
             OffsetDateTime odtReq = OffsetDateTime.parse(json.get("requestedAt").asText());
@@ -198,10 +160,31 @@ public class TossPayController {
 
             int totalAmount = json.get("totalAmount").asInt();
 
+            // 3) 로그인 회원 검증
+            // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
+
+            // 4) 세션에서 결제 정보 꺼내고 즉시 제거
+            String orderId = dto.getOrderId();
+            Long ticCode = (Long) session.getAttribute(orderId + "_ticCode");
+            Long savedMemberCode = (Long) session.getAttribute(orderId + "_memberCode");
+
+            // 세션 정보 즉시 제거 (보안)
+            session.removeAttribute(orderId + "_ticCode");
+            session.removeAttribute(orderId + "_memberCode");
+
+            // 5) 추가 보안 검증: 결제를 시작한 사용자와 승인하는 사용자가 같은지 확인
+            if (savedMemberCode == null || !savedMemberCode.equals(member.getMemCode())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of(
+                                "message", "결제 승인 권한이 없습니다.",
+                                "success", false
+                        ));
+            }
+
             // 6) DB에 결제 내역 저장
             paymentService.insertPayment(
                     member.getMemCode(),
-                    paymentData.getTicCode(), // Redis에서 조회한 ticCode
+                    ticCode,
                     dto.getOrderId(),
                     dto.getPaymentKey(),
                     paymentMethod,
@@ -210,24 +193,21 @@ public class TossPayController {
                     Integer.valueOf(dto.getAmount())
             );
 
-            // 7) 성공 시 Redis 데이터 정리
-            paymentTemporaryStorage.removePaymentData(orderId);
-            
-            System.out.println("Redis 기반 결제 승인 성공 - orderId: " + orderId);
+            System.out.println("결제 승인 및 DB 저장 완료");
             return ResponseEntity.ok(Map.of(
-                "message", "결제 성공",
-                "success", true,
-                "orderId", orderId,
-                "paymentKey", dto.getPaymentKey()
+                    "message", "결제가 성공적으로 완료되었습니다.",
+                    "success", true,
+                    "paymentKey", dto.getPaymentKey(),
+                    "orderId", dto.getOrderId(),
+                    "amount", dto.getAmount()
             ));
 
         } catch (Exception e) {
-            System.err.println("결제 승인 중 오류 - orderId: " + orderId + ", error: " + e.getMessage());
-            
-            // 실패 시 토스페이먼츠 결제 취소 및 Redis 상태 업데이트
+            System.err.println("결제 승인 중 오류 - orderId: " + dto.getOrderId() + ", error: " + e.getMessage());
+
+            // 실패 시 토스페이먼츠 결제 취소 시도
             try {
                 requestCancel(dto.getPaymentKey(), Integer.parseInt(dto.getAmount()), "DB 처리 실패로 인한 자동 취소");
-                paymentTemporaryStorage.updatePaymentStatus(orderId, "FAILED");
             } catch (Exception cancelException) {
                 System.err.println("결제 취소 중 추가 오류: " + cancelException.getMessage());
             }
