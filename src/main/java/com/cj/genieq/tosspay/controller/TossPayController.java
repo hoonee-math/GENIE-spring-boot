@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Base64;
+import java.util.Map;
 
 
 @RestController
@@ -73,11 +74,19 @@ public class TossPayController {
             
             System.out.println("Redis 저장 완료 - orderId: " + orderId + ", memberCode: " + memberCode);
             
-            return ResponseEntity.ok("결제 임시 데이터 저장 성공");
+            return ResponseEntity.ok(Map.of(
+                "message", "결제 임시 데이터 저장 성공", 
+                "success", true,
+                "orderId", orderId
+            ));
             
         } catch (Exception e) {
             System.err.println("결제 임시 저장 실패: " + e.getMessage());
-            return ResponseEntity.status(500).body("결제 데이터 저장에 실패했습니다.");
+            return ResponseEntity.status(500).body(Map.of(
+                "message", "결제 데이터 저장에 실패했습니다.",
+                "success", false,
+                "error", e.getMessage()
+            ));
         }
     }
 
@@ -111,15 +120,19 @@ public class TossPayController {
             }
             
             System.out.println("결제 검증 성공 - orderId: " + orderId);
-            return ResponseEntity.ok("결제 데이터 검증 성공");
+            return ResponseEntity.ok(Map.of(
+                "message", "결제 데이터 검증 성공",
+                "success", true,
+                "orderId", orderId
+            ));
             
         } catch (Exception e) {
             System.err.println("결제 검증 중 오류: " + e.getMessage());
-            return ResponseEntity.status(500)
-                    .body(TossPayErrorResponse.builder()
-                            .code(500)
-                            .message("결제 검증 중 오류가 발생했습니다.")
-                            .build());
+            return ResponseEntity.status(500).body(Map.of(
+                "message", "결제 검증 중 오류가 발생했습니다.",
+                "success", false,
+                "error", e.getMessage()
+            ));
         }
     }
 
@@ -129,7 +142,7 @@ public class TossPayController {
      * 결제 완료 후 Redis 데이터 자동 정리
      */
     @PostMapping("/confirm")
-    public ResponseEntity<String> confirm(
+    public ResponseEntity<?> confirm(
             @AuthenticationPrincipal AuthenticatedMemberDto member,
             @RequestBody ConfirmPaymentRequestDto dto
     ) throws Exception {
@@ -140,8 +153,11 @@ public class TossPayController {
             var optionalPaymentData = paymentTemporaryStorage.getPaymentData(orderId);
             if (optionalPaymentData.isEmpty()) {
                 System.err.println("결제 승인 실패 - Redis 데이터 없음: " + orderId);
-                return ResponseEntity.badRequest()
-                        .body("{\"error\":\"결제 데이터를 찾을 수 없습니다.\"}");
+                return ResponseEntity.badRequest().body(Map.of(
+                    "message", "결제 데이터를 찾을 수 없습니다.",
+                    "success", false,
+                    "orderId", orderId
+                ));
             }
             
             PaymentTempData paymentData = optionalPaymentData.get();
@@ -149,8 +165,11 @@ public class TossPayController {
             // 2) 회원 검증 (보안 강화)
             if (!member.getMemCode().equals(paymentData.getMemberCode())) {
                 System.err.println("결제 승인 실패 - 회원 불일치: " + orderId);
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("{\"error\":\"결제 권한이 없습니다.\"}");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "message", "결제 권한이 없습니다.",
+                    "success", false,
+                    "orderId", orderId
+                ));
             }
             
             // 3) 결제 상태를 PROCESSING으로 업데이트
@@ -195,7 +214,12 @@ public class TossPayController {
             paymentTemporaryStorage.removePaymentData(orderId);
             
             System.out.println("Redis 기반 결제 승인 성공 - orderId: " + orderId);
-            return ResponseEntity.ok().body("결제 성공");
+            return ResponseEntity.ok(Map.of(
+                "message", "결제 성공",
+                "success", true,
+                "orderId", orderId,
+                "paymentKey", dto.getPaymentKey()
+            ));
 
         } catch (Exception e) {
             System.err.println("결제 승인 중 오류 - orderId: " + orderId + ", error: " + e.getMessage());
@@ -208,9 +232,11 @@ public class TossPayController {
                 System.err.println("결제 취소 중 추가 오류: " + cancelException.getMessage());
             }
             
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\":\"결제 승인 중 오류가 발생했습니다.\"}");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "message", "결제 승인 중 오류가 발생했습니다.",
+                "success", false,
+                "error", e.getMessage()
+            ));
         }
     }
 
