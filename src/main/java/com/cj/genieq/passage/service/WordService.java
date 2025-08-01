@@ -118,10 +118,10 @@ public class WordService {
                     answerRun.setFontSize(10);
 
                     // 해설 출력 (있는 경우)
-                    if (question.getDescription() != null && !question.getDescription().isEmpty()) {
+                    if (question.getQueDescription() != null && !question.getQueDescription().isEmpty()) {
                         XWPFParagraph descriptionParagraph = document.createParagraph();
                         XWPFRun descriptionRun = descriptionParagraph.createRun();
-                        descriptionRun.setText("해설 : " + stripHtmlTags(question.getDescription()));
+                        descriptionRun.setText("해설 : " + stripHtmlTags(question.getQueDescription()));
                         descriptionRun.setFontSize(10);
                     }
 

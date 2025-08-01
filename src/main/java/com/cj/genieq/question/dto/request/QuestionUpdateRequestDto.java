@@ -16,6 +16,6 @@ public class QuestionUpdateRequestDto {
     private String queQuery; //질문
     private String queOption; //보기
     private String queAnswer; //해설
-    private String description; //해설
+    private String queDescription; //해설
     private String queSubpassage; //박스형 보기에 들어가는 글
 }

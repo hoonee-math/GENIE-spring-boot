@@ -335,14 +335,14 @@ public class PdfService {
                         yPosition -= 20;
 
                         // 해설 출력
-                        if (question.getDescription() != null && !question.getDescription().isEmpty()) {
+                        if (question.getQueDescription() != null && !question.getQueDescription().isEmpty()) {
                             answerStream.beginText();
                             answerStream.setFont(regularFont, 10);
                             answerStream.newLineAtOffset(MARGIN + 20, yPosition);
                             answerStream.showText("해설 : ");
                             answerStream.endText();
 
-                            String description = stripHtmlTags(question.getDescription());
+                            String description = stripHtmlTags(question.getQueDescription());
 
                             float labelWidth = regularFont.getStringWidth("해설 : ") / 1000 * 10;
                             float newX = MARGIN + 20 + labelWidth;

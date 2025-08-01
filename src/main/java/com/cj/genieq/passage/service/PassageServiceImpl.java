@@ -403,7 +403,7 @@ public class PassageServiceImpl implements PassageService {
                         .queQuery(q.getQueQuery())
                         .queOption(q.getQueOption())
                         .queAnswer(q.getQueAnswer())
-                        .description(q.getQueDescription())
+                        .queDescription(q.getQueDescription())
                         .queSubpassage(q.getQueSubpassage())
                         .build())
                 .collect(Collectors.toList())
@@ -494,7 +494,7 @@ public class PassageServiceImpl implements PassageService {
                                 .queQuery(q.getQueQuery())
                                 .queOption(q.getQueOption())
                                 .queAnswer(q.getQueAnswer())
-                                .description(q.getDescription())
+                                .queDescription(q.getQueDescription())
                                 .build())
                         .collect(Collectors.toList());
     

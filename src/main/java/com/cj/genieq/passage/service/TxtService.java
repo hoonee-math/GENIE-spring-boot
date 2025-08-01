@@ -44,8 +44,8 @@ public class TxtService {
                 }
 
                 sb.append("정답: ").append(question.getQueAnswer()).append("\n");
-                if (question.getDescription() != null && !question.getDescription().isEmpty()) {
-                    sb.append("해설 : ").append(stripHtmlTags(question.getDescription())).append("\n");
+                if (question.getQueDescription() != null && !question.getQueDescription().isEmpty()) {
+                    sb.append("해설 : ").append(stripHtmlTags(question.getQueDescription())).append("\n");
                 }
 
                 sb.append("\n");
