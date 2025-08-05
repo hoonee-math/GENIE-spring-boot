@@ -20,6 +20,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -554,7 +556,7 @@ public class PassageServiceImpl implements PassageService {
                 .map(p -> PassageStorageEachResponseDto.builder()
                         .title(p.getTitle())
                         .isGenerated(p.getIsGenerated())
-                        .date(p.getDate().toLocalDate())
+                        .date(LocalDateTime.from(p.getDate().toLocalDate()))
                         .isFavorite(p.getIsFavorite())
                         .build())
                 .collect(Collectors.toList());
@@ -578,7 +580,7 @@ public class PassageServiceImpl implements PassageService {
                         .pasCode(p.getPasCode())
                         .title(p.getTitle())
                         .isGenerated(p.getIsGenerated())
-                        .date(p.getDate().toLocalDate())
+                        .date(LocalDateTime.from(p.getDate().toLocalDate()))
                         .isFavorite(p.getIsFavorite())
                         .build())
                 .collect(Collectors.toList());
@@ -603,7 +605,7 @@ public class PassageServiceImpl implements PassageService {
                         .pasCode(p.getPasCode())
                         .title(p.getTitle())
                         .isGenerated(p.getIsGenerated())
-                        .date(p.getDate().toLocalDate())
+                        .date(LocalDateTime.from(p.getDate().toLocalDate()))
                         .isFavorite(p.getIsFavorite())
                         .build())
                 .collect(Collectors.toList());
@@ -681,7 +683,7 @@ public class PassageServiceImpl implements PassageService {
                         .pasCode(p.getPasCode())
                         .title(p.getTitle())
                         .isGenerated(p.getIsGenerated())
-                        .date(p.getDate().toLocalDate())
+                        .date(LocalDateTime.from(p.getDate().toLocalDate()))
                         .isFavorite(p.getIsFavorite())
                         .build())
                 .collect(Collectors.toList());

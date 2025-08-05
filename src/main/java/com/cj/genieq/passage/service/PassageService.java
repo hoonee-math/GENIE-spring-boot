@@ -13,6 +13,8 @@ import com.cj.genieq.passage.dto.response.*;
 import com.cj.genieq.passage.entity.PassageEntity;
 import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
 import com.cj.genieq.question.dto.response.QuestionSelectResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;

@@ -4,10 +4,8 @@ import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.passage.dto.request.*;
 import com.cj.genieq.passage.dto.response.*;
-import com.cj.genieq.passage.service.PassageService;
-import com.cj.genieq.passage.service.PdfService;
-import com.cj.genieq.passage.service.TxtService;
-import com.cj.genieq.passage.service.WordService;
+import com.cj.genieq.passage.repository.PassageRepository;
+import com.cj.genieq.passage.service.*;
 import com.cj.genieq.question.dto.request.QuestionInsertRequestDto;
 import com.cj.genieq.question.dto.request.QuestionPartialUpdateRequestDto;
 import com.cj.genieq.question.dto.response.QuestionSelectResponseDto;
@@ -18,6 +16,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +29,14 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/pass")
 @RequiredArgsConstructor
 public class PassageController {
 
     private final PassageService passageService;
+    private final StorageService storageService;
     private final PdfService pdfService;
     private final WordService wordService;
     private final TxtService txtService;
@@ -300,6 +301,79 @@ public class PassageController {
 
         return ResponseEntity.ok(numberOfRecentChange);
     }
+
+    /**
+     * 🔥 통합 Storage 리스트 조회 엔드포인트
+     * GET /api/pass/storage/{type}?page=1&size=15&field=기술&search=AI&sort=date&order=desc
+     *
+     * @param type 리스트 타입 (recent, favorite, deleted)
+     * @param page 페이지 번호 (1부터 시작)
+     * @param size 페이지 크기
+     * @param field 분야 필터 (인문, 사회, 예술, 과학, 기술, 독서론)
+     * @param search 검색어 (제목, 키워드 대상)
+     * @param sort 정렬 기준 (date, title, favorite)
+     * @param order 정렬 순서 (asc, desc)
+     * @param member JWT로 인증된 사용자 정보
+     * @return 통합 응답 DTO (페이지네이션 포함)
+     */
+    @GetMapping("/storage/{type}")
+    public ResponseEntity<?> getStorageList(
+            @PathVariable String type,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(required = false) String field,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "date") String sort,
+            @RequestParam(defaultValue = "desc") String order,
+            @AuthenticationPrincipal AuthenticatedMemberDto member
+    ) {
+        try {
+            // 타입 유효성 검사
+            if (!isValidStorageType(type)) {
+                return ResponseEntity.badRequest().body("유효하지 않은 저장소 타입입니다: " + type);
+            }
+
+            log.info("🔄 통합 Storage 조회 요청 - type: {}, page: {}, field: {}, search: {}",
+                    type, page, field, search);
+
+            // 🔥 통합 서비스 메서드 호출
+            PassageListWithPaginationResponseDto response = storageService
+                    .getStorageListWithPagination(
+                            member.getMemCode(),
+                            type,
+                            page,
+                            size,
+                            field,
+                            search,
+                            sort,
+                            order
+                    );
+
+            log.info("✅ 통합 Storage 조회 완료 - type: {}, 아이템 수: {}", type, response.getItems().size());
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("⚠️ 잘못된 요청 파라미터 - type: {}, error: {}", type, e.getMessage());
+            return ResponseEntity.badRequest().body("잘못된 요청입니다: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("❌ Storage 조회 중 오류 발생 - type: {}, error: {}", type, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("저장소 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Storage 타입 유효성 검사
+     */
+    private boolean isValidStorageType(String type) {
+        return type != null && (
+                "recent".equals(type) ||
+                        "favorite".equals(type) ||
+                        "deleted".equals(type)
+        );
+    }
+
+
 
     // 지문 삭제
     @PutMapping("/remove/each")

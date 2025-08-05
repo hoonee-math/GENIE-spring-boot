@@ -46,6 +46,12 @@ public class PassageEntity {
     @Column(name = "pas_is_generated")
     private Integer isGenerated;
 
+    @Column(name = "pas_is_user_entered")
+    private Integer isUserEntered;
+
+    @Column(name = "ref_pas_code")
+    private Long refPasCode;  // 부모 지문 참조 (NULL 가능)
+
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "mem_code") // ✅ FK도 소문자
