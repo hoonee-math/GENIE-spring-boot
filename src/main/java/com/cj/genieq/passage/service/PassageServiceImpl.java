@@ -587,7 +587,7 @@ public class PassageServiceImpl implements PassageService {
                 .map(p -> PassageStorageEachResponseDto.builder()
                         .title(p.getTitle())
                         .isGenerated(p.getIsGenerated())
-                        .date(LocalDateTime.from(p.getDate().toLocalDate()))
+                        .date(p.getDate())
                         .isFavorite(p.getIsFavorite())
                         .build())
                 .collect(Collectors.toList());
@@ -611,7 +611,7 @@ public class PassageServiceImpl implements PassageService {
                         .pasCode(p.getPasCode())
                         .title(p.getTitle())
                         .isGenerated(p.getIsGenerated())
-                        .date(LocalDateTime.from(p.getDate().toLocalDate()))
+                        .date(p.getDate())
                         .isFavorite(p.getIsFavorite())
                         .build())
                 .collect(Collectors.toList());
@@ -636,7 +636,7 @@ public class PassageServiceImpl implements PassageService {
                         .pasCode(p.getPasCode())
                         .title(p.getTitle())
                         .isGenerated(p.getIsGenerated())
-                        .date(LocalDateTime.from(p.getDate().toLocalDate()))
+                        .date(p.getDate())
                         .isFavorite(p.getIsFavorite())
                         .build())
                 .collect(Collectors.toList());
@@ -714,7 +714,7 @@ public class PassageServiceImpl implements PassageService {
                         .pasCode(p.getPasCode())
                         .title(p.getTitle())
                         .isGenerated(p.getIsGenerated())
-                        .date(LocalDateTime.from(p.getDate().toLocalDate()))
+                        .date(p.getDate())
                         .isFavorite(p.getIsFavorite())
                         .build())
                 .collect(Collectors.toList());
