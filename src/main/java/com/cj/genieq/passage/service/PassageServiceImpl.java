@@ -64,7 +64,9 @@ public class PassageServiceImpl implements PassageService {
                     .title(title)
                     .content(passageDto.getContent())
                     .date(LocalDateTime.now())
-                    .isGenerated(1)
+                    .isGenerated(passageDto.getIsGenerated())
+                    .isUserEntered(passageDto.getIsUserEntered())
+                    .refPasCode(null) // 기본 지문은 refPasCode가 null
                     .member(member)
                     .build();
 
@@ -317,23 +319,52 @@ public class PassageServiceImpl implements PassageService {
     
             // 2. 제목 중복 처리
             String title = generateTitle(requestDto.getTitle());
+            
+            PassageEntity savedPassage;
+            
+            // 3. refPasCode 분기 처리
+            if (requestDto.getRefPasCode() == null) {
+                // 3-1. 사용자 입력 지문: 먼저 기본 지문 저장
+                PassageInsertRequestDto passageDto = PassageInsertRequestDto.builder()
+                        .title(title)
+                        .content(requestDto.getContent())
+                        .isGenerated(requestDto.getIsGenerated())
+                        .isUserEntered(requestDto.getIsUserEntered())
+                        .descriptions(requestDto.getDescriptions())
+                        .build();
+
+                PassageSelectResponseDto basicPassage = savePassage(memCode, passageDto);
+                
+                // 3-2. 저장된 pasCode를 refPasCode로 사용하여 지문+문항 저장
+                PassageEntity passage = PassageEntity.builder()
+                        .title(title)
+                        .content(requestDto.getContent())
+                        .date(LocalDateTime.now())
+                        .isDeleted(0)
+                        .isFavorite(0)
+                        .isGenerated(0)
+                        .refPasCode(basicPassage.getPasCode()) // 생성된 pasCode를 refPasCode로 설정
+                        .member(member)
+                        .build();
+                        
+                savedPassage = passageRepository.save(passage);
+            } else {
+                // 3-3. 자료실 지문: refPasCode가 이미 있는 경우
+                PassageEntity passage = PassageEntity.builder()
+                        .title(title)
+                        .content(requestDto.getContent())
+                        .date(LocalDateTime.now())
+                        .isDeleted(0)
+                        .isFavorite(0)
+                        .isGenerated(0)
+                        .refPasCode(requestDto.getRefPasCode())
+                        .member(member)
+                        .build();
+                        
+                savedPassage = passageRepository.save(passage);
+            }
     
-            // 3. 지문 엔티티 생성 (Description 관련 필드 제거)
-            PassageEntity passage = PassageEntity.builder()
-                    .title(title)
-                    .content(requestDto.getContent())
-                    .date(LocalDateTime.now())
-                    .isDeleted(0)
-                    .isFavorite(0)
-                    //.isGenerated(requestDto.getIsGenerated() != null ? requestDto.getIsGenerated() : 0)
-                    .isGenerated(0)
-                    .member(member)
-                    .build();
-    
-            // 4. 지문 저장
-            PassageEntity savedPassage = passageRepository.save(passage);
-    
-            // 5. Description 엔티티들 생성 및 저장 (null 체크 포함)
+            // 4. Description 엔티티들 생성 및 저장 (null 체크 포함)
             List<DescriptionEntity> savedDescriptions = new ArrayList<>();
             if (requestDto.getDescriptions() != null && !requestDto.getDescriptions().isEmpty()) {
                 List<DescriptionEntity> descriptions = requestDto.getDescriptions().stream()
@@ -349,16 +380,16 @@ public class PassageServiceImpl implements PassageService {
                 savedDescriptions = descriptionRepository.saveAll(descriptions);
             }
     
-            // 6. 문항 저장은 QuestionService에서 처리
+            // 5. 문항 저장은 QuestionService에서 처리
             List<QuestionSelectResponseDto> questions = new ArrayList<>();
             if (requestDto.getQuestions() != null && !requestDto.getQuestions().isEmpty()) {
                 questions = questionService.saveQuestions(savedPassage, requestDto.getQuestions());
             }
     
-            // 7. 사용량 처리
+            // 6. 사용량 처리
             usageService.updateUsage(memCode, -1, "문항 생성");
     
-            // 8. Description 엔티티를 DTO로 변환
+            // 7. Description 엔티티를 DTO로 변환
             List<DescriptionDto> descriptionDtos = savedDescriptions.stream()
                     .map(desc -> DescriptionDto.builder()
                             .pasType(desc.getPasType())
@@ -368,7 +399,7 @@ public class PassageServiceImpl implements PassageService {
                             .build())
                     .collect(Collectors.toList());
     
-            // 9. 응답 DTO 생성
+            // 8. 응답 DTO 생성
             PassageWithQuestionsResponseDto responseDto = PassageWithQuestionsResponseDto.builder()
                     .pasCode(savedPassage.getPasCode())
                     .title(savedPassage.getTitle())

@@ -20,6 +20,8 @@ public class PassageWithQuestionsRequestDto {
     private String title;
     private String content;
     private Integer isGenerated;
+    private Integer isUserEntered;
+    private Long refPasCode; // 부모 지문 참조 코드 추가
     private List<DescriptionDto> descriptions;
     private List<QuestionInsertRequestDto> questions;
 

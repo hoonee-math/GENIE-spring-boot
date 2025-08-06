@@ -16,5 +16,6 @@ public class PassageInsertRequestDto {
     private String title;
     private String content;
     private Integer isGenerated;
+    private Integer isUserEntered;
     private List<DescriptionDto> descriptions;
 }
