@@ -20,7 +20,8 @@ public class PassageStorageEachResponseDto {
     // ===== Repository에서 직접 채워지는 필드들 =====
     private Long pasCode;          // 지문 코드
     private String title;          // 지문 제목
-    private Integer isGenerated;   // 생성 여부 (1: AI생성, 0: 지문+문항)
+    private Integer isGenerated;   // 생성 여부 (1: ai가 생성한 지문, 0: 지문+문항)
+    private Integer isUserEntered; // 사용자가 직접 입력한 지문인지 체크
     private LocalDateTime date;    // 작업 날짜
     private Integer isFavorite;    // 즐겨찾기 여부
 
@@ -61,12 +62,14 @@ public class PassageStorageEachResponseDto {
             Long pasCode,
             String title,
             Integer isGenerated,
+            Integer isUserEntered,
             LocalDateTime date,
             Integer isFavorite
     ) {
         this.pasCode = pasCode;
         this.title = title;
         this.isGenerated = isGenerated;
+        this.isUserEntered = isUserEntered;
         this.date = date;
         this.isFavorite = isFavorite;
     }

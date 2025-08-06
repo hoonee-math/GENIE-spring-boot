@@ -99,12 +99,13 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
 
     // 1. 기본 정보만 조회 (기존 쿼리 수정)
     @Query("SELECT new com.cj.genieq.passage.dto.response.PassagePreviewListDto(" +
-            "p.pasCode, p.title, p.content,null) " +
+            "p.pasCode, p.title, p.content,p.isFavorite,null) " +
             "FROM PassageEntity p " +
-            "WHERE p.member.memCode = :memCode AND p.isGenerated = 1 AND p.isDeleted = 0 " +
+            "WHERE p.member.memCode = :memCode " +
+            "AND (p.isGenerated = 1 OR p.isUserEntered = 1) " +
+            "AND p.isDeleted = 0 " +
             "AND (:isFavorite IS NULL OR p.isFavorite = :isFavorite) " +
-            "ORDER BY p.date DESC " +
-            "LIMIT 10")
+            "ORDER BY p.date DESC ")
     List<PassagePreviewListDto> findPassagePreviewsByMember(@Param("memCode") Long memCode,
                                                             @Param("isFavorite") Integer isFavorite);
 
@@ -127,6 +128,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
         p.pasCode,
         p.title, 
         p.isGenerated,
+        p.isUserEntered,
         p.date,
         p.isFavorite
     )
@@ -139,7 +141,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
         (:listType = 'favorite' AND p.isDeleted = 0 AND p.isFavorite = 1) OR
         (:listType = 'deleted' AND p.isDeleted = 1)
     )
-    AND (p.isGenerated = 1 OR p.isUserEntered = 1)
+    AND (p.isGenerated = 1 OR p.isUserEntered = 1 OR p.isUserEntered = 2)
     AND (:field IS NULL OR :field = '' OR d.pasType = :field)
     AND (:search IS NULL OR :search = '' OR 
          LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')) OR
