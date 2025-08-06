@@ -17,5 +17,6 @@ public class PassagePreviewListDto {
     private Long pasCode;
     private String title;
     private String content;
+    private Integer isFavorite;
     private List<DescriptionDto> descriptions;
 }
