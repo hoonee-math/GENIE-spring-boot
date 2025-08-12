@@ -39,4 +39,6 @@ public interface PassageService {
     boolean deletePassage(PassageDeleteRequestDto requestDto);
     boolean updatePassageTitle(PassageUpdateTitleRequestDto requestDto);
     List<PassageStorageEachResponseDto> findDeletedByMember(Long memCode);
+    
+    List<PassageWithQuestionsResponseDto> getPassagesWithQuestionsList(Long memCode);
 }

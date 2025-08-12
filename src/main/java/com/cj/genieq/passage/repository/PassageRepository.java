@@ -189,4 +189,18 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
     ORDER BY p.refPasCode, p.date DESC
     """)
     List<ChildPassageDto> findChildPassagesByParentCodes(@Param("parentPasCodeList") List<Long> parentPasCodeList);
+
+    /**
+     * 문항이 있는 지문 목록 조회 (문항 정보 포함)
+     * refPasCode가 NULL이 아닌 지문들이 문항을 포함하는 지문들
+     */
+    @Query("""
+    SELECT p 
+    FROM PassageEntity p 
+    WHERE p.member.memCode = :memCode 
+    AND p.isDeleted = 0
+    AND p.refPasCode IS NOT NULL
+    ORDER BY p.date DESC
+    """)
+    List<PassageEntity> findPassagesWithQuestionsByMember(@Param("memCode") Long memCode);
 }

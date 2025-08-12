@@ -104,6 +104,23 @@ public class PassageController {
         }
     }
 
+    @GetMapping("/list/withquestions")
+    public ResponseEntity<?> selectPassListWithQues(@AuthenticationPrincipal AuthenticatedMemberDto member) {
+        try {
+            System.out.println("지문 확인 요청 들어옴");
+            List<PassageWithQuestionsResponseDto> passagesWithQuestions = passageService.getPassagesWithQuestionsList(member.getMemCode());
+            System.out.println("지문 리스트 정보: "+passagesWithQuestions.size());
+            if (passagesWithQuestions.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("문항이 있는 지문이 없습니다.");
+            }
+            
+            return ResponseEntity.ok(passagesWithQuestions);
+        } catch (Exception e) {
+            log.error("문항이 있는 지문 목록 조회 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+        }
+    }
+
     // 지문 개별 조회
     @GetMapping("/select/{pasCode}")
     public ResponseEntity<?> selectPassage(@AuthenticationPrincipal AuthenticatedMemberDto member, @PathVariable Long pasCode) {

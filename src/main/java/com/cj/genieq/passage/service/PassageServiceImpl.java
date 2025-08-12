@@ -721,4 +721,31 @@ public class PassageServiceImpl implements PassageService {
 
         return passages;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PassageWithQuestionsResponseDto> getPassagesWithQuestionsList(Long memCode) {
+        // 1. Repository에서 문항이 있는 지문들 조회 (기본 정보만)
+        List<PassageEntity> passages = passageRepository.findPassagesWithQuestionsByMember(memCode);
+        System.out.println("조회한 지문 목록: "+passages.size());
+        if (passages == null || passages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 각 지문에 대해 상세 정보 조회 (기존 메서드 재사용)
+        List<PassageWithQuestionsResponseDto> result = passages.stream()
+                .map(passage -> {
+                    try {
+                        // 기존 getPassageWithQuestions 메서드 재사용하여 상세 정보 조회
+                        return getPassageWithQuestions(passage.getPasCode());
+                    } catch (Exception e) {
+                        log.warn("지문 {}의 상세 정보 조회 실패: {}", passage.getPasCode(), e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(dto -> dto != null && dto.getQuestions() != null && !dto.getQuestions().isEmpty())
+                .collect(Collectors.toList());
+
+        return result;
+    }
 }
