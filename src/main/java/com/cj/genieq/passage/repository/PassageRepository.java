@@ -180,6 +180,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
         p.pasCode,
         p.title,
         p.isGenerated,
+        p.isFavorite,
         p.date,
         p.refPasCode,
         SIZE(p.questions)

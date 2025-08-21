@@ -350,6 +350,7 @@ public class PassageController {
                 return ResponseEntity.badRequest().body("유효하지 않은 저장소 타입입니다: " + type);
             }
 
+            System.out.println("🔄 통합 Storage 조회 요청 - type: "+type+" page: "+page+" field: "+field+" search: "+search);
             log.info("🔄 통합 Storage 조회 요청 - type: {}, page: {}, field: {}, search: {}",
                     type, page, field, search);
 

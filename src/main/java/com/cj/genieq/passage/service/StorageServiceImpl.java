@@ -171,6 +171,7 @@ public class StorageServiceImpl implements StorageService {
                 .pasCode(record.pasCode())
                 .title(record.title())
                 .isGenerated(record.isGenerated())
+                .isFavorite(record.isFavorite())
                 .date(record.date())
                 .refPasCode(record.refPasCode())
                 .questionCount(record.questionCount())

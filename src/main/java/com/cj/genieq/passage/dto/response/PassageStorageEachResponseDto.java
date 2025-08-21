@@ -53,6 +53,7 @@ public class PassageStorageEachResponseDto {
         private Long pasCode;       // 지문+문항 코드
         private String title;       // 지문+문항 제목
         private Integer isGenerated; // 항상 0 (지문+문항)
+        private Integer isFavorite;
         private LocalDateTime date; // 생성 날짜
         private Long refPasCode;    // 부모 지문 참조
         private Integer questionCount; // 문항 개수
