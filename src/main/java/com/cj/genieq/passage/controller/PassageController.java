@@ -281,7 +281,7 @@ public class PassageController {
         return ResponseEntity.ok(favorites);
     }
 
-    // 최근 작업 내역 리스트
+    // 최근 작업 내역 리스트 (구 버전의 Storage, WorkListMain 에서 사용하는 api)
     @GetMapping("/select/recelist")
     public ResponseEntity<String> selectRecent(@AuthenticationPrincipal AuthenticatedMemberDto member) {
         List<PassageStorageEachResponseDto> recents = passageService.selectRecentList(member.getMemCode());
@@ -320,7 +320,7 @@ public class PassageController {
     }
 
     /**
-     * 🔥 통합 Storage 리스트 조회 엔드포인트
+     * 🔥 통합 Storage 리스트 조회 엔드포인트 (새 버전의 storage 컴포넌트에서 사용하는 api)
      * GET /api/pass/storage/{type}?page=1&size=15&field=기술&search=AI&sort=date&order=desc
      *
      * @param type 리스트 타입 (recent, favorite, deleted)

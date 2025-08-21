@@ -619,7 +619,7 @@ public class PassageServiceImpl implements PassageService {
         return passages;
     }
 
-    // 최근 작업 내역 리스트
+    // 최근 작업 내역 리스트 (구 버전의 Storage, WorkListMain 에서 사용하는 api)
     @Override
     public List<PassageStorageEachResponseDto> selectRecentList(Long memCode) {
         List<PassageEntity> passageEntities = passageRepository.selectTop150RecentPassages(memCode);

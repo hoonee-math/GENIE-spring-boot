@@ -72,6 +72,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
         """, nativeQuery = true)
     List<PassageEntity> selectTop150FavoritePassages(@Param("memCode") Long memCode);
 
+    // (구 버전의 Storage, WorkListMain 에서 사용하는 api)
     @Query(value = """
         SELECT p.* FROM passage p
         WHERE p.mem_code = :memCode
@@ -118,7 +119,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
 
 
     /**
-     * 🔥 통합 Storage 리스트 조회 (DTO 직접 반환)
+     * 🔥 통합 Storage 리스트 조회 (DTO 직접 반환) (새 버전의 storage 컴포넌트에서 사용하는 api)
      * @param listType: "recent", "favorite", "deleted"
      * @param field: 분야 필터 (인문, 사회, 예술, 과학, 기술, 독서론)
      * @param search: 검색어 (제목, 키워드 대상)
@@ -141,7 +142,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
         (:listType = 'favorite' AND p.isDeleted = 0 AND p.isFavorite = 1) OR
         (:listType = 'deleted' AND p.isDeleted = 1)
     )
-    AND (p.isGenerated = 1 OR p.isUserEntered = 1 OR p.isUserEntered = 2)
+    AND (p.isGenerated = 1 OR p.isUserEntered = 1)
     AND (:field IS NULL OR :field = '' OR d.pasType = :field)
     AND (:search IS NULL OR :search = '' OR 
          LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')) OR
