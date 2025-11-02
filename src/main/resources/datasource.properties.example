@@ -1,0 +1,24 @@
+# database 관련 설정
+spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
+spring.datasource.url=${${active.db.profile}.db.url}
+spring.datasource.username=${db.username}
+spring.datasource.password=${db.password}
+
+# hikaripool 설정하기 (db 커넥션 풀 설정 : 커넥션 이름 / 유효 최대 커넥션 수 / / pool 에서 유효 상태 유지될 수 있는 최대 시간 (밀리초 30000은 30초) / 연결의 최대 수명 시간 (30분)
+spring.datasource.hikari.pool-name=genieq-pool
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.idle-timeout=30000
+spring.datasource.hikari.max-lifetime=18000000
+
+# JPA 설정하기 (사용 DB / 방언설정 / DDL 사용여부: Entity create / sql 문 확인)
+# spring.jpa.database=oracle
+# spring.jpa.database-platform=org.hibernate.dialect.OracleDialect
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MariaDBDialect
+spring.jpa.generate-ddl=true
+# 하이버네이트 설정
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=false
+spring.jpa.properties.hibernate.use_sql_comments=falsefind src/ -type f ! -path "*/generation/*" -exec grep "auth" {} +
+#spring.jpa.properties.hibernate.timezone=Asia/Seoul
+spring.jpa.properties.hibernate.jdbc.time_zone=UTC

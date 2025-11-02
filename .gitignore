@@ -33,4 +33,5 @@ build/
 
 ### 기타 민감 정보 등 ###
 **/*merged.md
-src/main/resources/
+src/main/resources/*
+!src/main/resources/*.example

@@ -1,0 +1,24 @@
+server.port=8080
+
+spring.application.name=genieq
+
+spring.config.import=datasource.properties, application-private.properties, application-toss.properties
+
+# swagger \uACBD\uB85C \uC124\uC815
+springdoc.swagger-ui.path=/swagger-ui.html
+
+## \uC138\uC158 \uD0C0\uC784\uC544\uC6C3 \uC124\uC815 (\uC0AC\uC6A9 \uC548 \uD568)
+#server.servlet.session.timeout=7200
+#
+## \uC138\uC158 \uCFE0\uD0A4 \uB9CC\uB8CC \uAE30\uAC04\uC744 \uC124\uC815\uD558\uC9C0 \uC54A\uC74C \u2192 \uBE0C\uB77C\uC6B0\uC800 \uB2EB\uC73C\uBA74 \uC138\uC158 \uC0AD\uC81C\uB428
+#server.servlet.session.cookie.max-age=7200
+
+# JWT \uD1A0\uD070 \uC124\uC815
+jwt.access-token-validity=3600000
+jwt.refresh-token-validity=604800000
+
+# \uB8E8\uD2B8 \uB85C\uAC70 \uB808\uBCA8\uC744 WARN\uC73C\uB85C \uC124\uC815 (INFO \uB85C\uADF8 \uD45C\uC2DC\uB418\uC9C0 \uC54A\uC74C)
+logging.level.root=WARN
+
+# JWT \uD544\uD130 \uB514\uBC84\uAE45 \uB85C\uADF8 \uD65C\uC131\uD654
+logging.level.com.cj.genieq.common.filter.JwtAuthenticationFilter=DEBUG
