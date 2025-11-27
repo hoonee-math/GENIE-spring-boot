@@ -119,7 +119,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
 
 
     /**
-     * 🔥 통합 Storage 리스트 조회 (DTO 직접 반환) (새 버전의 storage 컴포넌트에서 사용하는 api)
+     * 통합 Storage 리스트 조회 (DTO 직접 반환) (새 버전의 storage 컴포넌트에서 사용하는 api)
      * @param listType: "recent", "favorite", "deleted"
      * @param field: 분야 필터 (인문, 사회, 예술, 과학, 기술, 독서론)
      * @param search: 검색어 (제목, 키워드 대상)
@@ -157,7 +157,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
     );
 
     /**
-     * 🔥 특정 지문들의 모든 descriptions 배치 조회
+     * 특정 지문들의 모든 descriptions 배치 조회
      */
     @Query("""
     SELECT new com.cj.genieq.passage.dto.response.SimpleDescriptionDto(
@@ -173,7 +173,7 @@ public interface PassageRepository extends JpaRepository<PassageEntity, Long> {
     List<SimpleDescriptionDto> findSimpleDescriptionsByPassageCodes(@Param("pasCodeList") List<Long> pasCodeList);
 
     /**
-     * 🔥 특정 지문들의 childPassages 배치 조회
+     * 특정 지문들의 childPassages 배치 조회
      */
     @Query("""
     SELECT new com.cj.genieq.passage.dto.response.ChildPassageDto(

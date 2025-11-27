@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 🔥 최적화된 Storage 아이템 DTO
+ * 최적화된 Storage 아이템 DTO
  * Repository에서 기본 필드만 채우고, Service에서 배치 조회로 추가 데이터 설정
  */
 @Data

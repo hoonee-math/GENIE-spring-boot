@@ -1,7 +1,7 @@
 package com.cj.genieq.passage.dto.response;
 
 /**
- * 🔥 간단한 Description DTO (Record 기반)
+ * 간단한 Description DTO (Record 기반)
  * Repository 배치 조회용
  */
 public record SimpleDescriptionDto(

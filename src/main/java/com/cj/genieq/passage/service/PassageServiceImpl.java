@@ -43,7 +43,6 @@ public class PassageServiceImpl implements PassageService {
     private final DescriptionRepository descriptionRepository;
     private final UsageService usageService;
     private final QuestionService questionService;
-    private final QuestionRepository questionRepository;
 
     // 지문 저장
     @Override
@@ -118,35 +117,6 @@ public class PassageServiceImpl implements PassageService {
         } catch (Exception e) {
             e.printStackTrace();  // 예외 로깅
             return null;
-        }
-    }
-
-    // 지문 수정
-    @Override
-    @Transactional
-    public boolean updatePassage(PassageUpdateRequestDto passageDto) {
-        try {
-            // 1. 기존 지문 조회
-            PassageEntity passage = passageRepository.findById(passageDto.getPasCode())
-                    .orElseThrow(() -> new EntityNotFoundException("지문이 존재하지 않습니다."));
-
-            // 2. Passage 기본 정보만 수정 / 제목 수정이 발생한 경우에만 중복 검사 실행
-            if (passageDto.getTitle() != null && !passageDto.getTitle().equals(passage.getTitle())) {
-                passage.setTitle(generateTitle(passageDto.getTitle()));
-            }
-            if (passageDto.getContent() != null) {
-                passage.setContent(passageDto.getContent());
-            }
-            passage.setDate(LocalDateTime.now());
-
-            // 3. 저장
-            passageRepository.save(passage);
-
-            // 4. 단순 성공 응답
-            return true;
-
-        } catch (EntityNotFoundException e) {
-            return false;
         }
     }
 
@@ -698,28 +668,6 @@ public class PassageServiceImpl implements PassageService {
         }
 
         return true;
-    }
-
-    @Override
-    public List<PassageStorageEachResponseDto> findDeletedByMember(Long memCode) {
-
-        List<PassageEntity> entities = passageRepository.findDeletedByMember(memCode);
-
-        if (entities == null || entities.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<PassageStorageEachResponseDto> passages = entities.stream()
-                .map(p -> PassageStorageEachResponseDto.builder()
-                        .pasCode(p.getPasCode())
-                        .title(p.getTitle())
-                        .isGenerated(p.getIsGenerated())
-                        .date(p.getDate())
-                        .isFavorite(p.getIsFavorite())
-                        .build())
-                .collect(Collectors.toList());
-
-        return passages;
     }
 
     @Override

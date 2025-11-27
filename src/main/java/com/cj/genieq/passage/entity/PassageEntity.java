@@ -23,8 +23,8 @@ import java.util.List;
 public class PassageEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // ✅ MariaDB는 IDENTITY
-    @Column(name = "pas_code") // ✅ 소문자
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // MariaDB는 IDENTITY
+    @Column(name = "pas_code") // 소문자
     private Long pasCode;
 
     @Column(name = "pas_title", columnDefinition = "LONGTEXT")
@@ -54,7 +54,7 @@ public class PassageEntity {
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "mem_code") // ✅ FK도 소문자
+    @JoinColumn(name = "mem_code") // FK도 소문자
     private MemberEntity member;
 
     @JsonIgnore

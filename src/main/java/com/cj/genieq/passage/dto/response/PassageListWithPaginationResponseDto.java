@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * 🔥 통합 Storage API 응답 DTO (페이지네이션 포함)
+ * 통합 Storage API 응답 DTO (페이지네이션 포함)
  */
 @Data
 @Builder

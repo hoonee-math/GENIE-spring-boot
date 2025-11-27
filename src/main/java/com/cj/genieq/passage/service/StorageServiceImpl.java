@@ -30,7 +30,7 @@ public class StorageServiceImpl implements StorageService {
     private final PassageRepository passageRepository;
 
     /**
-     * 🔥 통합 Storage 리스트 조회 (최적화됨)
+     * 통합 Storage 리스트 조회 (최적화됨)
      * 1. Repository에서 DTO 직접 반환 (필수 필드만)
      * 2. descriptions와 childPassages 배치 조회
      * 3. 메모리에서 조합
@@ -43,27 +43,27 @@ public class StorageServiceImpl implements StorageService {
             String field,
             String search) {
 
-        log.info("🔄 통합 Storage 조회 - memCode: {}, listType: {}, field: {}, search: {}",
+        log.info("통합 Storage 조회 - memCode: {}, listType: {}, field: {}, search: {}",
                 memCode, listType, field, search);
 
-        // 1. 🔥 메인 데이터 조회 (DTO 직접 반환)
+        // 1. 메인 데이터 조회 (DTO 직접 반환)
         Page<PassageStorageEachResponseDto> dtoPage = passageRepository
                 .findPassagesWithFilters(memCode, listType, field, search, pageable);
 
         if (dtoPage.isEmpty()) {
-            log.info("📭 조회 결과 없음 - listType: {}", listType);
+            log.info("조회 결과 없음 - listType: {}", listType);
             return dtoPage;
         }
 
-        // 2. 🔥 추가 데이터 배치 조회 및 조합
+        // 2. 추가 데이터 배치 조회 및 조합
         enrichWithAdditionalData(dtoPage.getContent());
 
-        log.info("✅ 통합 조회 완료 - listType: {}, 아이템 수: {}", listType, dtoPage.getContent().size());
+        log.info("통합 조회 완료 - listType: {}, 아이템 수: {}", listType, dtoPage.getContent().size());
         return dtoPage;
     }
 
     /**
-     * 🔥 통합 Storage API 응답 생성
+     * 통합 Storage API 응답 생성
      */
     @Override
     public PassageListWithPaginationResponseDto getStorageListWithPagination(
@@ -119,15 +119,15 @@ public class StorageServiceImpl implements StorageService {
                 .map(PassageStorageEachResponseDto::getPasCode)
                 .collect(Collectors.toList());
 
-        // 🔥 descriptions 배치 조회
+        // descriptions 배치 조회
         List<SimpleDescriptionDto> allDescriptions =
                 passageRepository.findSimpleDescriptionsByPassageCodes(pasCodeList);
 
-        // 🔥 childPassages 배치 조회
+        // childPassages 배치 조회
         List<ChildPassageDto> allChildPassages =
                 passageRepository.findChildPassagesByParentCodes(pasCodeList);
 
-        // 🔥 메모리에서 그룹핑 및 조합
+        // 메모리에서 그룹핑 및 조합
         Map<Long, List<PassageStorageEachResponseDto.SimpleDescriptionInfo>> descriptionMap =
                 allDescriptions.stream()
                         .collect(Collectors.groupingBy(
@@ -142,13 +142,13 @@ public class StorageServiceImpl implements StorageService {
                                 Collectors.mapping(this::convertToChildPassageInfo, Collectors.toList())
                         ));
 
-        // 🔥 DTO에 추가 데이터 설정
+        // DTO에 추가 데이터 설정
         dtoList.forEach(dto -> {
             dto.setDescriptions(descriptionMap.getOrDefault(dto.getPasCode(), List.of()));
             dto.setChildPassages(childPassageMap.getOrDefault(dto.getPasCode(), List.of()));
         });
 
-        log.debug("✅ 배치 조회 완료 - descriptions: {}, childPassages: {}",
+        log.debug("배치 조회 완료 - descriptions: {}, childPassages: {}",
                 allDescriptions.size(), allChildPassages.size());
     }
 

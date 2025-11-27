@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
 public class DescriptionEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // ✅ MariaDB는 IDENTITY
-    @Column(name = "des_code") // ✅ 소문자
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // MariaDB는 IDENTITY
+    @Column(name = "des_code") // 소문자
     private Long desCode;
 
     @Column(name = "pas_type")
@@ -40,7 +40,7 @@ public class DescriptionEntity {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pas_code") // ✅ FK도 소문자
+    @JoinColumn(name = "pas_code") // FK도 소문자
     private PassageEntity passage;  // 프론트엔드의 methodType 이 single 이거나 reading 인 경우 1:1 관계, multiple 인 경우 2:1 관계 (description:passage)
 
 }

@@ -22,7 +22,6 @@ import java.util.List;
 public interface PassageService {
     PassageSelectResponseDto savePassage(Long memCode, PassageInsertRequestDto passageDto);
     PassageFavoriteResponseDto favoritePassage(PassageFavoriteRequestDto requestDto);
-    boolean updatePassage(PassageUpdateRequestDto passageDto);
     List<PassagePreviewListDto> getPreviewList(Long memCode);
     List<PassagePreviewListDto> getPreviewFavoriteList(Long memCode);
     PassageSelectResponseDto selectPassage(Long memCode, Long pasCode);
@@ -38,7 +37,6 @@ public interface PassageService {
     int countRecentChange(Long memCode);
     boolean deletePassage(PassageDeleteRequestDto requestDto);
     boolean updatePassageTitle(PassageUpdateTitleRequestDto requestDto);
-    List<PassageStorageEachResponseDto> findDeletedByMember(Long memCode);
     
     List<PassageWithQuestionsResponseDto> getPassagesWithQuestionsList(Long memCode);
 }

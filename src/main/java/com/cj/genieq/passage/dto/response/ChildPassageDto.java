@@ -3,7 +3,7 @@ package com.cj.genieq.passage.dto.response;
 import java.time.LocalDateTime;
 
 /**
- * 🔥 하위 지문+문항 DTO (Record 기반)
+ * 하위 지문+문항 DTO (Record 기반)
  * Repository 배치 조회용
  */
 public record ChildPassageDto(

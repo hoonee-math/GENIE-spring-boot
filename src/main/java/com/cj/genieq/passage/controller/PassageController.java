@@ -65,23 +65,6 @@ public class PassageController {
         }
     }
 
-    @PostMapping("/update/each")
-    public ResponseEntity<?> updatePassage(@RequestBody PassageUpdateRequestDto passageDto) {
-        try {
-            // 지문 수정 및 업데이트된 지문 정보 반환
-            boolean success = passageService.updatePassage(passageDto);
-            if (success) {
-                return ResponseEntity.ok("수정 완료");
-            } else {
-                return ResponseEntity.badRequest().body("수정 실패");
-            }
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("지문이 존재하지 않습니다.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("지문 수정 실패");
-        }
-    }
-
     @GetMapping("/select/prevlist")
     public ResponseEntity<?> selectPrevList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
         try {
@@ -187,19 +170,8 @@ public class PassageController {
         return ResponseEntity.ok(responseDto);
     }
 
-    // 지문 + 문항 수정
-    @PutMapping("/ques/update/{pasCode}")
-    public ResponseEntity<PassageWithQuestionsResponseDto> updatePassage(
-            @AuthenticationPrincipal AuthenticatedMemberDto member,
-            @PathVariable Long pasCode,
-            @RequestBody PassageWithQuestionsRequestDto requestDto) {
-
-        PassageWithQuestionsResponseDto updatedPassage = passageService.updatePassage(member.getMemCode(), pasCode, requestDto);
-        return ResponseEntity.ok(updatedPassage);
-
-    }
-
-    // 지문 데이터 수정 Patch 를 사용 (PUT은 리소스 전체를 대체하는 반면, PATCH는 리소스의 일부만 수정)
+    // put 요청 지문 수정, 문항 수정 요청 제거
+    // 지문 데이터 수정 Patch 를 사용 (기존 PUT은 리소스 전체를 대체하는 반면, PATCH는 리소스의 일부만 수정)
     @PatchMapping("/{pasCode}")
     public ResponseEntity<?> updatePassagePartial(
             @AuthenticationPrincipal AuthenticatedMemberDto member,
@@ -272,15 +244,6 @@ public class PassageController {
         }
     }
 
-    // 즐겨찾기 리스트
-    @GetMapping("/select/favolist")
-    public ResponseEntity<?> selectFavoList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
-
-        List<PassageStorageEachResponseDto> favorites = passageService.selectFavoriteList(member.getMemCode());
-
-        return ResponseEntity.ok(favorites);
-    }
-
     // 최근 작업 내역 리스트 (구 버전의 Storage, WorkListMain 에서 사용하는 api)
     @GetMapping("/select/recelist")
     public ResponseEntity<String> selectRecent(@AuthenticationPrincipal AuthenticatedMemberDto member) {
@@ -302,46 +265,19 @@ public class PassageController {
         }
     }
 
-    // 휴지통 리스트
-    @GetMapping("/select/deletedList")
-    public ResponseEntity<?> selectDeletedList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
-
-        List<PassageStorageEachResponseDto> deleted = passageService.findDeletedByMember(member.getMemCode());
-
-        return ResponseEntity.ok(deleted);
-    }
-
-    @GetMapping("/select/count/recent")
-    public ResponseEntity<?> countRecentChange(@AuthenticationPrincipal AuthenticatedMemberDto member){
-
-        int numberOfRecentChange = passageService.countRecentChange(member.getMemCode());
-
-        return ResponseEntity.ok(numberOfRecentChange);
-    }
-
     /**
-     * 🔥 통합 Storage 리스트 조회 엔드포인트 (새 버전의 storage 컴포넌트에서 사용하는 api)
+     * 통합 Storage 리스트 조회 엔드포인트 (새 버전의 storage 컴포넌트에서 사용하는 api)
      * GET /api/pass/storage/{type}?page=1&size=15&field=기술&search=AI&sort=date&order=desc
-     *
-     * @param type 리스트 타입 (recent, favorite, deleted)
-     * @param page 페이지 번호 (1부터 시작)
-     * @param size 페이지 크기
-     * @param field 분야 필터 (인문, 사회, 예술, 과학, 기술, 독서론)
-     * @param search 검색어 (제목, 키워드 대상)
-     * @param sort 정렬 기준 (date, title, favorite)
-     * @param order 정렬 순서 (asc, desc)
-     * @param member JWT로 인증된 사용자 정보
-     * @return 통합 응답 DTO (페이지네이션 포함)
      */
     @GetMapping("/storage/{type}")
-    public ResponseEntity<?> getStorageList(
-            @PathVariable String type,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "15") int size,
-            @RequestParam(required = false) String field,
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "date") String sort,
-            @RequestParam(defaultValue = "desc") String order,
+    public ResponseEntity<?> getStorageList(                        // @return 통합 응답 DTO (페이지네이션 포함)
+            @PathVariable String type,                              // 리스트 타입 (recent, favorite, deleted)
+            @RequestParam(defaultValue = "1") int page,             // 페이지 번호 (1부터 시작)
+            @RequestParam(defaultValue = "15") int size,            // 페이지 크기
+            @RequestParam(required = false) String field,           // 분야 필터 (인문, 사회, 예술, 과학, 기술, 독서론)
+            @RequestParam(required = false) String search,          // 검색어 (제목, 키워드 대상)
+            @RequestParam(defaultValue = "date") String sort,       // 정렬 기준 (date, title, favorite)
+            @RequestParam(defaultValue = "desc") String order,      // 정렬 순서 (asc, desc)
             @AuthenticationPrincipal AuthenticatedMemberDto member
     ) {
         try {
@@ -350,11 +286,11 @@ public class PassageController {
                 return ResponseEntity.badRequest().body("유효하지 않은 저장소 타입입니다: " + type);
             }
 
-            System.out.println("🔄 통합 Storage 조회 요청 - type: "+type+" page: "+page+" field: "+field+" search: "+search);
-            log.info("🔄 통합 Storage 조회 요청 - type: {}, page: {}, field: {}, search: {}",
+            System.out.println("통합 Storage 조회 요청 - type: "+type+" page: "+page+" field: "+field+" search: "+search);
+            log.info("통합 Storage 조회 요청 - type: {}, page: {}, field: {}, search: {}",
                     type, page, field, search);
 
-            // 🔥 통합 서비스 메서드 호출
+            // 통합 서비스 메서드 호출
             PassageListWithPaginationResponseDto response = storageService
                     .getStorageListWithPagination(
                             member.getMemCode(),
@@ -367,14 +303,14 @@ public class PassageController {
                             order
                     );
 
-            log.info("✅ 통합 Storage 조회 완료 - type: {}, 아이템 수: {}", type, response.getItems().size());
+            log.info("통합 Storage 조회 완료 - type: {}, 아이템 수: {}", type, response.getItems().size());
             return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
-            log.warn("⚠️ 잘못된 요청 파라미터 - type: {}, error: {}", type, e.getMessage());
+            log.warn("잘못된 요청 파라미터 - type: {}, error: {}", type, e.getMessage());
             return ResponseEntity.badRequest().body("잘못된 요청입니다: " + e.getMessage());
         } catch (Exception e) {
-            log.error("❌ Storage 조회 중 오류 발생 - type: {}, error: {}", type, e.getMessage(), e);
+            log.error("Storage 조회 중 오류 발생 - type: {}, error: {}", type, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("저장소 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
