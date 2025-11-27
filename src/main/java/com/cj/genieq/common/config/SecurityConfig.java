@@ -48,7 +48,7 @@ import java.util.List;
                 
                 // 요청별 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                    // 🔓 인증 불필요 경로 (Public)
+                    // 인증 불필요 경로 (Public)
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", 
                                    "/swagger-resources/**", "/configuration/**").permitAll() // Swagger UI
                     .requestMatchers("/api/test/**").permitAll() // 테스트 API
@@ -57,10 +57,10 @@ import java.util.List;
                     .requestMatchers("/api/auth/select/email", "/api/auth/update/temporal").permitAll() // 이메일 확인/임시 비밀번호
                     .requestMatchers("/api/noti/**").permitAll() // 공지사항은 누구나 조회 가능
                     
-                    // 🔐 OAuth2 소셜 로그인 관련 경로 (향후 추가될 예정)
+                    // OAuth2 소셜 로그인 관련 경로 (향후 추가될 예정)
                     .requestMatchers("/oauth2/**", "/api/oauth2/**").permitAll()
                     
-                    // 🔒 인증 필요 경로 (Protected) - JWT 토큰 필수
+                    // 인증 필요 경로 (Protected) - JWT 토큰 필수
                     .requestMatchers("/api/info/**").authenticated() // 회원 정보
                     .requestMatchers("/api/tick/**").authenticated() // 이용권
                     .requestMatchers("/api/paym/**").authenticated() // 결제
@@ -70,7 +70,7 @@ import java.util.List;
                     .requestMatchers("/api/usag/**").authenticated() // 이용내역
                     .requestMatchers("/api/tosspay/**").authenticated() // 토스 결제
                     
-                    // 🔐 관리자 권한 필요 경로 (향후 확장)
+                    // 관리자 권한 필요 경로 (향후 확장)
                     // .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     
                     // 기타 모든 요청은 인증 필요
@@ -128,7 +128,9 @@ import java.util.List;
             "http://localhost:443",
             "http://localhost",
             "http://43.203.127.158", // 운영 서버
-            "https://chunjae-it-edu.com" // 운영 도메인
+            "https://chunjae-it-edu.com", // 운영 도메인
+            "https://genie.hoonee-math.info",
+            "http://genie.hoonee-math.info" // GenieQ 운영 도메인 (HTTP)
         ));
         
         // 허용할 HTTP 메서드
