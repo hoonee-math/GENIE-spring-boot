@@ -86,8 +86,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * HTTP 요청에서 JWT 토큰 추출
-     * Authorization: Bearer eyJ... 형태에서 토큰 부분만 추출
-     * @param request HTTP 요청
      * @return JWT 토큰 (없으면 null)
      */
     private String getTokenFromRequest(HttpServletRequest request) {
@@ -101,18 +99,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    /**
-     * SecurityContext 초기화
-     * 인증 실패 시 기존 인증 정보 제거
-     */
+    // 인증 실패 시 기존 인증 정보 제거 (SecurityContext 초기화)
     private void clearSecurityContext() {
         SecurityContextHolder.clearContext();
     }
 
-    /**
-     * 특정 경로에 대해 필터를 건너뛸지 결정
-     * JWT 인증이 불필요한 공개 API 경로들
-     */
+    // JWT 인증이 불필요한 공개 API 경로들 (특정 경로에 대해 필터를 건너뛸지 결정)
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
@@ -134,6 +126,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                path.equals("/api/auth/test-jwt") ||         // JWT 테스트
                path.equals("/api/auth/insert/signup") ||    // 회원가입
                path.equals("/api/auth/select/login") ||     // 로그인
+               path.equals("/api/auth/refresh") ||          // 토큰 갱신
                path.equals("/api/auth/select/email") ||     // 이메일 확인
                path.equals("/api/auth/update/temporal") ||  // 임시 비밀번호
                path.startsWith("/oauth2/") ||               // OAuth2 관련 (향후 추가)
@@ -158,8 +151,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (token != null) {
                 try {
                     Long memCode = jwtTokenProvider.getMemberIdFromToken(token);
-                    String email = jwtTokenProvider.getEmailFromToken(token);
-                    log.debug("Token MemCode: {}, Email: {}", memCode, email);
+                    log.debug("Token MemCode: {}", memCode);
                 } catch (Exception e) {
                     log.debug("Token parsing failed: {}", e.getMessage());
                 }
