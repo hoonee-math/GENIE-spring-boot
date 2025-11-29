@@ -90,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
         );
         
         // 토큰 만료 시간 계산
-        long expiresAt = System.currentTimeMillis() + jwtTokenProvider.getTokenValidityInMilliseconds();
+        long expiresAt = System.currentTimeMillis() + jwtTokenProvider.getAccessTokenValidityInMilliseconds();
     
         // 로그인 응답 DTO 생성 (기존 필드 + JWT 토큰 필드)
         return LoginMemberResponseDto.builder()

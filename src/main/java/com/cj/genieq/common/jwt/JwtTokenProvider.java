@@ -2,6 +2,7 @@ package com.cj.genieq.common.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,13 +22,14 @@ public class JwtTokenProvider {
     // JWT 서명에 사용할 비밀키 (application-private.properties에서 주입)
     private final SecretKey secretKey;
 
-    // 액세스 토큰 만료시간 (기본: 15분)
+    // @return 액세스 토큰 유효기간 (밀리초)
+    @Getter
     private final long accessTokenValidityInMilliseconds;
 
     // 리프레시 토큰 만료시간 (기본: 7일)
+    @Getter
     private final long refreshTokenValidityInMilliseconds;
-    
-    // 리프레시 토큰 만료시간 (기본: 7일)
+
     /**
      * JwtTokenProvider 생성자
      * @param secretKey JWT 서명용 비밀키 (64자 이상 필수)
@@ -56,14 +58,7 @@ public class JwtTokenProvider {
                 accessTokenValidityInMilliseconds, refreshTokenValidityInMilliseconds);
     }
 
-    /**
-     * 액세스 토큰 생성
-     * GENIE의 MemberEntity 필드명에 맞게 구현 (memCode, memEmail)
-     * @param memCode 사용자 ID (MemberEntity.memCode)
-     * @param memEmail 사용자 이메일 (MemberEntity.memEmail) 
-     * @param role 사용자 권한
-     * @return JWT 액세스 토큰
-     */
+    // @return JWT 액세스 토큰 생성
     public String createAccessToken(Long memCode, String memEmail, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenValidityInMilliseconds);
@@ -79,11 +74,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    /**
-     * 리프레시 토큰 생성
-     * @param memCode 사용자 ID (MemberEntity.memCode)
-     * @return JWT 리프레시 토큰
-     */
+    // @return JWT 리프레시 토큰 생성
     public String createRefreshToken(Long memCode) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshTokenValidityInMilliseconds);
@@ -97,43 +88,19 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    /**
-     * 토큰에서 사용자 ID 추출
-     * GENIE의 MemberEntity.memCode와 호환
-     * @param token JWT 토큰
-     * @return 사용자 ID (memCode)
-     */
+    // @return 사용자 ID (memCode)
     public Long getMemberIdFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
         return Long.parseLong(claims.getSubject());
     }
 
-    /**
-     * 토큰에서 이메일 추출
-     * GENIE의 MemberEntity.memEmail과 호환
-     * @param token JWT 토큰
-     * @return 사용자 이메일 (memEmail)
-     */
-    public String getEmailFromToken(String token) {
-        Claims claims = getClaimsFromToken(token);
-        return claims.get("memEmail", String.class);
-    }
-
-    /**
-     * 토큰에서 권한 추출
-     * @param token JWT 토큰
-     * @return 사용자 권한
-     */
+    // @return 사용자 권한
     public String getRoleFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
         return claims.get("role", String.class);
     }
 
-    /**
-     * 토큰 유효성 검증
-     * @param token JWT 토큰
-     * @return 유효하면 true, 아니면 false
-     */
+    // 토큰 유효성 검증, @return 유효하면 true, 아니면 false
     public boolean validateToken(String token) {
         try {
             getClaimsFromToken(token);
@@ -158,21 +125,13 @@ public class JwtTokenProvider {
                 .getBody();
     }
 
-    /**
-     * 토큰 만료 시간 확인
-     * @param token JWT 토큰
-     * @return 만료 시간
-     */
+    // @return 토큰 만료 시간
     public Date getExpirationDateFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
         return claims.getExpiration();
     }
 
-    /**
-     * 토큰이 만료되었는지 확인
-     * @param token JWT 토큰
-     * @return 만료되었으면 true, 아니면 false
-     */
+    // @return 토큰이 만료되었으면 true, 아니면 false
     public boolean isTokenExpired(String token) {
         try {
             Date expiration = getExpirationDateFromToken(token);
@@ -182,63 +141,9 @@ public class JwtTokenProvider {
         }
     }
 
-    /**
-     * 토큰 타입 확인 (access 또는 refresh)
-     * @param token JWT 토큰
-     * @return 토큰 타입
-     */
+    // @return 토큰 타입 (access 또는 refresh)
     public String getTokenType(String token) {
         Claims claims = getClaimsFromToken(token);
         return claims.get("type", String.class);
     }
-
-    /**
-     * 디버그용: 토큰 정보 로깅 (운영환경에서는 보안상 사용 금지)
-     * @param token JWT 토큰
-     */
-    public void logTokenInfo(String token) {
-        if (!log.isDebugEnabled()) {
-            return;
-        }
-        
-        try {
-            Claims claims = getClaimsFromToken(token);
-            log.debug("=== JWT Token Info ===");
-            log.debug("Subject (memCode): {}", claims.getSubject());
-            log.debug("Email (memEmail): {}", claims.get("memEmail"));
-            log.debug("Role: {}", claims.get("role"));
-            log.debug("Type: {}", claims.get("type"));
-            log.debug("Issued At: {}", claims.getIssuedAt());
-            log.debug("Expires At: {}", claims.getExpiration());
-            log.debug("====================");
-        } catch (JwtException e) {
-            log.debug("Failed to parse token for logging: {}", e.getMessage());
-        }
-        }
-        
-        // ========== Getter 메서드 ==========
-        
-        /**
-        * 액세스 토큰 유효기간 조회
-        * @return 액세스 토큰 유효기간 (밀리초)
-        */
-        public long getTokenValidityInMilliseconds() {
-        return accessTokenValidityInMilliseconds;
-        }
-        
-        /**
-        * 액세스 토큰 유효기간 조회
-        * @return 액세스 토큰 유효기간 (밀리초)
-        */
-        public long getAccessTokenValidityInMilliseconds() {
-        return accessTokenValidityInMilliseconds;
-        }
-        
-        /**
-        * 리프레시 토큰 유효기간 조회
-        * @return 리프레시 토큰 유효기간 (밀리초)
-        */
-        public long getRefreshTokenValidityInMilliseconds() {
-        return refreshTokenValidityInMilliseconds;
-        }
-        }
+}
