@@ -1,6 +1,5 @@
 package com.cj.genieq.tosspay.controller;
 
-import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.payment.service.PaymentService;
 import com.cj.genieq.tosspay.dto.request.ConfirmPaymentRequestDto;
 import com.cj.genieq.tosspay.dto.request.TossPayRequestDto;
@@ -52,13 +51,13 @@ public class TossPayController {
     //결제 금액 임시 저장
     @PostMapping("/saveAmount")
     public ResponseEntity<?> saveAmount(
-            @AuthenticationPrincipal AuthenticatedMemberDto member,
+            @AuthenticationPrincipal Long memCode,
             HttpSession session,
             @RequestBody TossPayRequestDto tossPayRequestDto) {
 
         try {
             // JWT로 인증된 사용자만 결제 초기화 가능
-            log.info("결제 초기화 - memCode: {}", member.getMemCode());
+            log.info("결제 초기화 - memCode: {}", memCode);
             log.debug("결제 정보: {}", tossPayRequestDto);
 
             String orderId = tossPayRequestDto.getOrderId();
@@ -70,7 +69,7 @@ public class TossPayController {
             // ticCode 세션 저장
             session.setAttribute(orderId + "_ticCode", ticCode);
             // 보안을 위해 회원 코드도 세션에 저장하여 검증에 사용
-            session.setAttribute(orderId + "_memberCode", member.getMemCode());
+            session.setAttribute(orderId + "_memberCode", memCode);
 
             return ResponseEntity.ok(Map.of(
                 "message", "결제 임시 데이터 저장 성공", 
@@ -91,11 +90,11 @@ public class TossPayController {
     //결제 금액 검증
     @PostMapping("/verifyAmount")
     public ResponseEntity<?> verifyAmount(
-            @AuthenticationPrincipal AuthenticatedMemberDto member,
+            @AuthenticationPrincipal Long memCode,
             HttpSession session,
             @RequestBody TossPayRequestDto tossPayRequestDto) {
         // JWT로 인증된 사용자만 결제 검증 가능
-        log.info("결제 검증 - memCode: {}", member.getMemCode());
+        log.info("결제 검증 - memCode: {}", memCode);
         log.debug("검증 요청: {}", tossPayRequestDto);
 
         String orderId = tossPayRequestDto.getOrderId();
@@ -116,7 +115,7 @@ public class TossPayController {
         }
 
         // 회원 코드 검증 (결제를 시작한 사용자와 검증하는 사용자가 같은지 확인)
-        if (savedMemberCode == null || !savedMemberCode.equals(member.getMemCode())) {
+        if (savedMemberCode == null || !savedMemberCode.equals(memCode)) {
             session.removeAttribute(orderId + "_amount");
             session.removeAttribute(orderId + "_memberCode");
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -136,7 +135,7 @@ public class TossPayController {
     @PostMapping("/confirm")
     public ResponseEntity<?> confirm(
             HttpSession session,
-            @AuthenticationPrincipal AuthenticatedMemberDto member,
+            @AuthenticationPrincipal Long memCode,
             @RequestBody ConfirmPaymentRequestDto dto
     ) throws Exception {
         try {
@@ -175,7 +174,7 @@ public class TossPayController {
             session.removeAttribute(orderId + "_memberCode");
 
             // 5) 추가 보안 검증: 결제를 시작한 사용자와 승인하는 사용자가 같은지 확인
-            if (savedMemberCode == null || !savedMemberCode.equals(member.getMemCode())) {
+            if (savedMemberCode == null || !savedMemberCode.equals(memCode)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of(
                                 "message", "결제 승인 권한이 없습니다.",
@@ -185,7 +184,7 @@ public class TossPayController {
 
             // 6) DB에 결제 내역 저장
             paymentService.insertPayment(
-                    member.getMemCode(),
+                    memCode,
                     ticCode,
                     dto.getOrderId(),
                     dto.getPaymentKey(),

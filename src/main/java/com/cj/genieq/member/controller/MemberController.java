@@ -3,7 +3,6 @@ package com.cj.genieq.member.controller;
 import com.cj.genieq.member.dto.request.*;
 import com.cj.genieq.member.dto.response.LoginMemberResponseDto;
 import com.cj.genieq.member.dto.response.MemberInfoResponseDto;
-import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.member.service.AuthService;
 import com.cj.genieq.member.service.InfoService;
 import com.cj.genieq.common.jwt.JwtTokenProvider;
@@ -96,26 +95,20 @@ public class MemberController {
      * 기존 세션 방식에서 JWT 토큰 기반 인증으로 전환
      */
     @PutMapping("/auth/remove/withdraw")
-    public ResponseEntity<?> withdraw(@RequestBody WithdrawRequestDto withdrawRequestDto, @AuthenticationPrincipal AuthenticatedMemberDto member) {
-        // 1. 요청 이메일과 로그인 사용자 이메일 비교
-        if (!member.getMemEmail().equals(withdrawRequestDto.getMemEmail())) {
-            // 보안 위험 로그
-            log.warn("회원탈퇴 요청 이메일 불일치 - memCode: {}", member.getMemCode());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "본인의 계정만 탈퇴할 수 있습니다.", "status", 403));
-        }
-
-        // 2. 정상적인 탈퇴 처리
-        log.info("회원탈퇴 요청 - memCode: {}", member.getMemCode());
+    public ResponseEntity<?> withdraw(@RequestBody WithdrawRequestDto withdrawRequestDto, @AuthenticationPrincipal Long memCode) {
+        // JWT 인증으로 본인 확인 완료 (SecurityContext에 memCode 저장됨)
+        log.info("회원탈퇴 요청 - memCode: {}", memCode);
 
         try {
+            // 이메일 대신 memCode로 탈퇴 처리
             authService.withdraw(withdrawRequestDto.getMemEmail());
             // 3. 성공 로그
-            log.info("회원탈퇴 완료 - memCode: {}", member.getMemCode());
+            log.info("회원탈퇴 완료 - memCode: {}", memCode);
             return ResponseEntity.ok(Map.of("message", "탈퇴완료", "status", 200));
 
         } catch (Exception e) {
             // 4. 실패 로그
-            log.error("회원탈퇴 실패 - memCode: {}, 오류: {}", member.getMemCode(), e.getMessage());
+            log.error("회원탈퇴 실패 - memCode: {}, 오류: {}", memCode, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "탈퇴 처리 중 오류가 발생했습니다.", "status", 500));
         }
@@ -216,9 +209,9 @@ public class MemberController {
 
     // 회원 정보 전체 조회
     @GetMapping("/info/select/entire")
-    public ResponseEntity<?> selectEntire(@AuthenticationPrincipal AuthenticatedMemberDto member){ // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
+    public ResponseEntity<?> selectEntire(@AuthenticationPrincipal Long memCode){ // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
 
-        MemberInfoResponseDto memberInfo = infoService.getMemberInfo(member.getMemCode());
+        MemberInfoResponseDto memberInfo = infoService.getMemberInfo(memCode);
 
         return ResponseEntity.ok().body(memberInfo);
 
@@ -226,9 +219,9 @@ public class MemberController {
 
     // 회원의 잔여 이용권 조회
     @GetMapping("/info/select/ticket")
-    public ResponseEntity<String> selectTicket(@AuthenticationPrincipal AuthenticatedMemberDto member){
-        log.debug("이용권 조회 요청 - memCode: {}", member.getMemCode());
-        Long memberCode = member.getMemCode();
+    public ResponseEntity<String> selectTicket(@AuthenticationPrincipal Long memCode){
+        log.debug("이용권 조회 요청 - memCode: {}", memCode);
+        Long memberCode = memCode;
         int balance = infoService.getUsageBalance(memberCode);
         int total = infoService.getUsageTotal(memberCode);
     
@@ -246,28 +239,28 @@ public class MemberController {
     }
 
     @PatchMapping("/info/update/name")
-    public ResponseEntity<String> updateName(@RequestBody UpdateNameRequestDto updateNameRequestDto, @AuthenticationPrincipal AuthenticatedMemberDto member){
-        infoService.updateName(updateNameRequestDto.getMemName(), member.getMemCode());
+    public ResponseEntity<String> updateName(@RequestBody UpdateNameRequestDto updateNameRequestDto, @AuthenticationPrincipal Long memCode){
+        infoService.updateName(updateNameRequestDto.getMemName(), memCode);
         return ResponseEntity.ok("이름 수정 완료");
     }
 
     @PatchMapping("/info/update/type")
-    public ResponseEntity<String> updateType(@RequestBody UpdateTypeRequestDto updateTypeRequestDto, @AuthenticationPrincipal AuthenticatedMemberDto member){
-        infoService.updateType(updateTypeRequestDto.getMemType(), member.getMemCode());
+    public ResponseEntity<String> updateType(@RequestBody UpdateTypeRequestDto updateTypeRequestDto, @AuthenticationPrincipal Long memCode){
+        infoService.updateType(updateTypeRequestDto.getMemType(), memCode);
         return ResponseEntity.ok("소속 수정 완료");
     }
 
     @PatchMapping("/info/update/password")
     public ResponseEntity<String> updatePassword(
             @RequestBody UpdatePasswordRequestDto updatePasswordRequestDto,
-            @AuthenticationPrincipal AuthenticatedMemberDto member
+            @AuthenticationPrincipal Long memCode
             ){
         // System.out.println("start");
         infoService.updatePassword(
                 updatePasswordRequestDto.getCurrentPassword(),
                 updatePasswordRequestDto.getNewPassword(),
                 updatePasswordRequestDto.getConfirmPassword(),
-                member.getMemCode()
+                memCode
         );
         // System.out.println("end");
         return ResponseEntity.ok("비밀번호 수정 완료");

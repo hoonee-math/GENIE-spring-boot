@@ -1,6 +1,5 @@
 package com.cj.genieq.passage.controller;
 
-import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.passage.dto.request.*;
 import com.cj.genieq.passage.dto.response.*;
@@ -51,12 +50,12 @@ public class PassageController {
      */
     @PostMapping("/insert/each")
     public ResponseEntity<?> insertEach(
-            @AuthenticationPrincipal AuthenticatedMemberDto member, // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
+            @AuthenticationPrincipal Long memCode, // Spring Security가 자동으로 JWT 검증 및 사용자 정보 주입, 인증되지 않은 요청은 SecurityConfig에서 401 자동 처리
             @RequestBody PassageInsertRequestDto passageDto) {
         System.out.println("request passage data: " + passageDto.toString());
 
         // 지문 생성 (기존 비즈니스 로직 유지)
-        PassageSelectResponseDto savedPassage = passageService.savePassage(member.getMemCode(), passageDto);
+        PassageSelectResponseDto savedPassage = passageService.savePassage(memCode, passageDto);
     
         if (savedPassage != null) {
             return ResponseEntity.ok(savedPassage);
@@ -66,10 +65,10 @@ public class PassageController {
     }
 
     @GetMapping("/select/prevlist")
-    public ResponseEntity<?> selectPrevList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
+    public ResponseEntity<?> selectPrevList(@AuthenticationPrincipal Long memCode) {
         try {
 
-            List<PassagePreviewListDto> previews = passageService.getPreviewList(member.getMemCode());
+            List<PassagePreviewListDto> previews = passageService.getPreviewList(memCode);
 
             // 지문 목록이 비어있는 경우 처리 (optional)
             if (previews.isEmpty()) {
@@ -88,10 +87,10 @@ public class PassageController {
     }
 
     @GetMapping("/list/withquestions")
-    public ResponseEntity<?> selectPassListWithQues(@AuthenticationPrincipal AuthenticatedMemberDto member) {
+    public ResponseEntity<?> selectPassListWithQues(@AuthenticationPrincipal Long memCode) {
         try {
             System.out.println("지문 확인 요청 들어옴");
-            List<PassageWithQuestionsResponseDto> passagesWithQuestions = passageService.getPassagesWithQuestionsList(member.getMemCode());
+            List<PassageWithQuestionsResponseDto> passagesWithQuestions = passageService.getPassagesWithQuestionsList(memCode);
             System.out.println("지문 리스트 정보: "+passagesWithQuestions.size());
             if (passagesWithQuestions.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).body("문항이 있는 지문이 없습니다.");
@@ -106,10 +105,10 @@ public class PassageController {
 
     // 지문 개별 조회
     @GetMapping("/select/{pasCode}")
-    public ResponseEntity<?> selectPassage(@AuthenticationPrincipal AuthenticatedMemberDto member, @PathVariable Long pasCode) {
+    public ResponseEntity<?> selectPassage(@AuthenticationPrincipal Long memCode, @PathVariable Long pasCode) {
         try {
             // PassageService에서 지문 정보를 조회
-            PassageSelectResponseDto passage = passageService.selectPassage(member.getMemCode(), pasCode);
+            PassageSelectResponseDto passage = passageService.selectPassage(memCode, pasCode);
 
             // 지문이 존재하지 않으면 예외 처리
             if (passage == null) {
@@ -137,20 +136,20 @@ public class PassageController {
 
     // 지문 + 문항 저장
     @PostMapping("/ques/insert/each")
-    public ResponseEntity<?> savePassage(@AuthenticationPrincipal AuthenticatedMemberDto member, @RequestBody PassageWithQuestionsRequestDto requestDto) {
+    public ResponseEntity<?> savePassage(@AuthenticationPrincipal Long memCode, @RequestBody PassageWithQuestionsRequestDto requestDto) {
 
-        PassageWithQuestionsResponseDto responseDto = passageService.savePassageWithQuestions(member.getMemCode(), requestDto);
+        PassageWithQuestionsResponseDto responseDto = passageService.savePassageWithQuestions(memCode, requestDto);
 
         return ResponseEntity.ok(responseDto);
     }
 
     // 기존 pasCode에 추가되는 문항을 저장
     @PostMapping("/ques/add/{pasCode}")
-    public ResponseEntity<?> addQuestionToPassage(@AuthenticationPrincipal AuthenticatedMemberDto member,@PathVariable Long pasCode, @RequestBody QuestionInsertRequestDto requestDto) {
+    public ResponseEntity<?> addQuestionToPassage(@AuthenticationPrincipal Long memCode,@PathVariable Long pasCode, @RequestBody QuestionInsertRequestDto requestDto) {
         System.out.println("request passage data: " + requestDto.toString());
         try{
             // 기존 지문에 새 문항만 추가하는 로직, 저장한 데이터의 QueCode 값을 응답해줌
-            QuestionEntity responseData = questionService.addQuestionToExistingPassage(member.getMemCode(), pasCode, requestDto);
+            QuestionEntity responseData = questionService.addQuestionToExistingPassage(memCode, pasCode, requestDto);
             return ResponseEntity.ok(responseData);
         }catch (EntityNotFoundException e) {
             // requestDto.pasCode 가 없을 경우
@@ -174,13 +173,13 @@ public class PassageController {
     // 지문 데이터 수정 Patch 를 사용 (기존 PUT은 리소스 전체를 대체하는 반면, PATCH는 리소스의 일부만 수정)
     @PatchMapping("/{pasCode}")
     public ResponseEntity<?> updatePassagePartial(
-            @AuthenticationPrincipal AuthenticatedMemberDto member,
+            @AuthenticationPrincipal Long memCode,
             @PathVariable Long pasCode,
             @RequestBody PassagePartialUpdateRequestDto updateDto
     ) {
         try {
             // System.out.println("request passage data: " + updateDto.toString());
-            boolean success = passageService.updatePassagePartial(member.getMemCode(), pasCode, updateDto);
+            boolean success = passageService.updatePassagePartial(memCode, pasCode, updateDto);
             if (success) {
                 return ResponseEntity.ok(Map.of("message", "수정 완료", "success", true));
             } else {
@@ -196,14 +195,14 @@ public class PassageController {
     // 문항 데이터 수정 Patch 를 사용 (PUT은 리소스 전체를 대체하는 반면, PATCH는 리소스의 일부만 수정)
     @PatchMapping("/{pasCode}/ques/{queCode}")
     public ResponseEntity<?> updateQuestionPartial(
-            @AuthenticationPrincipal AuthenticatedMemberDto member,
+            @AuthenticationPrincipal Long memCode,
             @PathVariable Long pasCode,
             @PathVariable Long queCode,
             @RequestBody QuestionPartialUpdateRequestDto updateDto
     ) {
         try {
             System.out.println("문항 데이터 수정 요청 들어옴, updateDto: " + updateDto.toString());
-            boolean success = questionService.updateQuestionPartial(member.getMemCode(), pasCode, queCode, updateDto);
+            boolean success = questionService.updateQuestionPartial(memCode, pasCode, queCode, updateDto);
             if (success) {
                 return ResponseEntity.ok(Map.of("message", "문항 수정 완료", "success", true));
             } else {
@@ -220,11 +219,11 @@ public class PassageController {
 
     // 자료실 메인화면 리스트(즐겨찾기+최근 작업)
     @GetMapping("/select/list")
-    public ResponseEntity<?> selectList(@AuthenticationPrincipal AuthenticatedMemberDto member) {
+    public ResponseEntity<?> selectList(@AuthenticationPrincipal Long memCode) {
 
         try {
-            List<PassageStorageEachResponseDto> favorites = passageService.selectPassageListInStorage(member.getMemCode(), 1, 5);
-            List<PassageStorageEachResponseDto> recent = passageService.selectPassageListInStorage(member.getMemCode(), 0, 8);
+            List<PassageStorageEachResponseDto> favorites = passageService.selectPassageListInStorage(memCode, 1, 5);
+            List<PassageStorageEachResponseDto> recent = passageService.selectPassageListInStorage(memCode, 0, 8);
 
             PassageStorageMainResponseDto responseDto = PassageStorageMainResponseDto.builder()
                     .favorites(favorites)
@@ -246,8 +245,8 @@ public class PassageController {
 
     // 최근 작업 내역 리스트 (구 버전의 Storage, WorkListMain 에서 사용하는 api)
     @GetMapping("/select/recelist")
-    public ResponseEntity<String> selectRecent(@AuthenticationPrincipal AuthenticatedMemberDto member) {
-        List<PassageStorageEachResponseDto> recents = passageService.selectRecentList(member.getMemCode());
+    public ResponseEntity<String> selectRecent(@AuthenticationPrincipal Long memCode) {
+        List<PassageStorageEachResponseDto> recents = passageService.selectRecentList(memCode);
 
         // ObjectMapper에 JavaTimeModule 등록
         ObjectMapper mapper = new ObjectMapper();
@@ -278,7 +277,7 @@ public class PassageController {
             @RequestParam(required = false) String search,          // 검색어 (제목, 키워드 대상)
             @RequestParam(defaultValue = "date") String sort,       // 정렬 기준 (date, title, favorite)
             @RequestParam(defaultValue = "desc") String order,      // 정렬 순서 (asc, desc)
-            @AuthenticationPrincipal AuthenticatedMemberDto member
+            @AuthenticationPrincipal Long memCode
     ) {
         try {
             // 타입 유효성 검사
@@ -293,7 +292,7 @@ public class PassageController {
             // 통합 서비스 메서드 호출
             PassageListWithPaginationResponseDto response = storageService
                     .getStorageListWithPagination(
-                            member.getMemCode(),
+                            memCode,
                             type,
                             page,
                             size,

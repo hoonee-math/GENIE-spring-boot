@@ -1,8 +1,6 @@
 package com.cj.genieq.common.filter;
 
 import com.cj.genieq.common.jwt.JwtTokenProvider;
-import com.cj.genieq.member.entity.MemberEntity;
-import com.cj.genieq.member.repository.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,16 +13,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.cj.genieq.member.dto.AuthenticatedMemberDto;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Optional;
 
 /**
  * JWT 토큰 인증 필터
  * Authorization 헤더의 JWT 토큰을 검증하고 Spring Security Context에 인증 정보 설정
- * GENIE의 기존 AuthInterceptor를 대체하는 Spring Security 표준 필터
+ * Stateless JWT 인증: DB 조회 없이 토큰에서 memCode만 추출하여 Principal에 저장
  */
 @Slf4j
 @Component
@@ -32,7 +28,6 @@ import java.util.Optional;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final MemberRepository memberRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, 
@@ -45,59 +40,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Authorization 헤더에서 JWT 토큰 추출
             String token = getTokenFromRequest(request);
-            
+
             if (token != null && jwtTokenProvider.validateToken(token)) {
                 // 토큰에서 사용자 ID 추출 (GENIE의 memCode)
                 Long memCode = jwtTokenProvider.getMemberIdFromToken(token);
-                
-                // GENIE의 MemberRepository로 사용자 정보 조회
-                Optional<AuthenticatedMemberDto> memberOptional = memberRepository.findAuthenticatedMemberById(memCode);
 
-                if (memberOptional.isPresent()) {
-                    AuthenticatedMemberDto member = memberOptional.get();
-                    
-                    // 계정이 활성화되어 있고 탈퇴하지 않은 상태인지 확인
-                    if (member.getMemIsDeleted() == 0) {
-                        // 토큰에서 권한 정보 추출, 일반 사용자인지 확인 작업
-                        String role = jwtTokenProvider.getRoleFromToken(token);
-                        // 🔧 수정: 빈 문자열도 체크하고 ROLE_ 접두사 추가
-                        if (role == null || role.trim().isEmpty()) {
-                            role = "ROLE_USER"; // 기본 권한
-                        } else if (!role.startsWith("ROLE_")) {
-                            role = "ROLE_" + role; // ROLE_ 접두사 추가
-                        }
-                        
-                        // Spring Security 인증 객체 생성
-                        UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                member,  // Principal (인증된 사용자 정보 - AuthenticatedMemberDto)
-                                null,   // Credentials (비밀번호 등, JWT에서는 불필요)
-                                Collections.singletonList(new SimpleGrantedAuthority(role)) // 권한
-                            );
-                        
-                        // SecurityContext에 인증 정보 설정
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                // 토큰에서 권한 정보 추출
+                String role = jwtTokenProvider.getRoleFromToken(token);
 
-                        log.debug("JWT authentication successful for memCode: {}",
-                                member.getMemCode());
-                    } else {
-                        log.warn("Deleted member account access attempt - memCode: {}",
-                                member.getMemCode());
-                        clearSecurityContext();
-                    }
-                } else {
-                    log.warn("Member not found for token memCode: {}", memCode);
-                    clearSecurityContext();
+                // ROLE_ 접두사 추가
+                if (role == null || role.trim().isEmpty()) {
+                    role = "ROLE_USER"; // 기본 권한
+                } else if (!role.startsWith("ROLE_")) {
+                    role = "ROLE_" + role;
                 }
-                
+
+                // Spring Security 인증 객체 생성 (Principal = Long memCode)
+                UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                        memCode,  // Principal (사용자 ID만 저장)
+                        null,     // Credentials (비밀번호 등, JWT에서는 불필요)
+                        Collections.singletonList(new SimpleGrantedAuthority(role)) // 권한
+                    );
+
+                // SecurityContext에 인증 정보 설정
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.debug("JWT authentication successful for memCode: {}", memCode);
+
             } else if (token != null) {
                 log.debug("Invalid JWT token received for request: {}", request.getRequestURI());
                 clearSecurityContext();
             }
             // token이 null인 경우는 로그하지 않음 (공개 API 요청)
-            
+
         } catch (Exception e) {
-            log.error("JWT authentication failed for request: {} - Error: {}", 
+            log.error("JWT authentication failed for request: {} - Error: {}",
                     request.getRequestURI(), e.getMessage());
             clearSecurityContext();
         }

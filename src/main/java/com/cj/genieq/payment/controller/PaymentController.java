@@ -1,7 +1,5 @@
 package com.cj.genieq.payment.controller;
 
-import com.cj.genieq.member.dto.AuthenticatedMemberDto;
-import com.cj.genieq.member.entity.MemberEntity;
 import com.cj.genieq.payment.dto.request.PaymentRequestDto;
 import com.cj.genieq.payment.dto.response.PaymentListResponseDto;
 import com.cj.genieq.payment.service.PaymentService;
@@ -21,9 +19,9 @@ public class PaymentController {
 
     // 결제 내역 추가
     @PostMapping("/insert/each")
-    public ResponseEntity<?> insertEach(@AuthenticationPrincipal AuthenticatedMemberDto member, @RequestBody PaymentRequestDto paymentRequestDto) {
+    public ResponseEntity<?> insertEach(@AuthenticationPrincipal Long memCode, @RequestBody PaymentRequestDto paymentRequestDto) {
 
-        //paymentService.insertPayment(member.getMemCode(), paymentRequestDto.getTicCode());
+        //paymentService.insertPayment(memCode, paymentRequestDto.getTicCode());
 
         return ResponseEntity.ok().body("결제 성공");
     }
@@ -35,9 +33,9 @@ public class PaymentController {
             @RequestParam("endDate") LocalDate endDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @AuthenticationPrincipal AuthenticatedMemberDto member) {
+            @AuthenticationPrincipal Long memCode) {
 
-        List<PaymentListResponseDto> payments = paymentService.getPaymentList(member.getMemCode(), startDate, endDate);
+        List<PaymentListResponseDto> payments = paymentService.getPaymentList(memCode, startDate, endDate);
         return ResponseEntity.ok(payments);
     }
 }
