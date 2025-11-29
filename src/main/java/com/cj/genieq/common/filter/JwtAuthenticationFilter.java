@@ -77,12 +77,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         
                         // SecurityContext에 인증 정보 설정
                         SecurityContextHolder.getContext().setAuthentication(authentication);
-                        
-                        log.debug("JWT authentication successful for member: {} (memCode: {})", 
-                                member.getMemEmail(), member.getMemCode());
+
+                        log.debug("JWT authentication successful for memCode: {}",
+                                member.getMemCode());
                     } else {
-                        log.warn("Deleted member account access attempt: {} (memCode: {})",
-                                member.getMemEmail(), member.getMemCode());
+                        log.warn("Deleted member account access attempt - memCode: {}",
+                                member.getMemCode());
                         clearSecurityContext();
                     }
                 } else {

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,7 @@ import java.time.OffsetDateTime;
 import java.util.Base64;
 
 
+@Slf4j
 @RestController
 @RequestMapping("/api/tosspay")
 @RequiredArgsConstructor
@@ -56,8 +58,8 @@ public class TossPayController {
 
         try {
             // JWT로 인증된 사용자만 결제 초기화 가능
-            System.out.println("JWT 인증된 사용자 결제 초기화: " + member.getMemName() + " (코드: " + member.getMemCode() + ")");
-            System.out.println("토스 검증시 필요한 세션 저장용 결제 정보: "+tossPayRequestDto);
+            log.info("결제 초기화 - memCode: {}", member.getMemCode());
+            log.debug("결제 정보: {}", tossPayRequestDto);
 
             String orderId = tossPayRequestDto.getOrderId();
             String amount = tossPayRequestDto.getAmount();
@@ -93,8 +95,8 @@ public class TossPayController {
             HttpSession session,
             @RequestBody TossPayRequestDto tossPayRequestDto) {
         // JWT로 인증된 사용자만 결제 검증 가능
-        System.out.println("JWT 인증된 사용자 결제 검증: " + member.getMemName() + " (코드: " + member.getMemCode() + ")");
-        System.out.println("검증 요청: " + tossPayRequestDto);
+        log.info("결제 검증 - memCode: {}", member.getMemCode());
+        log.debug("검증 요청: {}", tossPayRequestDto);
 
         String orderId = tossPayRequestDto.getOrderId();
 

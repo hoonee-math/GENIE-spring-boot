@@ -100,22 +100,22 @@ public class MemberController {
         // 1. 요청 이메일과 로그인 사용자 이메일 비교
         if (!member.getMemEmail().equals(withdrawRequestDto.getMemEmail())) {
             // 보안 위험 로그
-            log.warn("회원탈퇴 요청 이메일 불일치 - 로그인 사용자: {} (memCode: {}), 요청 이메일: {}", member.getMemEmail(), member.getMemCode(), withdrawRequestDto.getMemEmail());
+            log.warn("회원탈퇴 요청 이메일 불일치 - memCode: {}", member.getMemCode());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "본인의 계정만 탈퇴할 수 있습니다.", "status", 403));
         }
 
         // 2. 정상적인 탈퇴 처리
-        log.info("회원탈퇴 요청 - 사용자: {} (memCode: {})", member.getMemEmail(), member.getMemCode());
+        log.info("회원탈퇴 요청 - memCode: {}", member.getMemCode());
 
         try {
             authService.withdraw(withdrawRequestDto.getMemEmail());
             // 3. 성공 로그
-            log.info("회원탈퇴 완료 - 사용자: {} (memCode: {})", member.getMemEmail(), member.getMemCode());
+            log.info("회원탈퇴 완료 - memCode: {}", member.getMemCode());
             return ResponseEntity.ok(Map.of("message", "탈퇴완료", "status", 200));
 
         } catch (Exception e) {
             // 4. 실패 로그
-            log.error("회원탈퇴 실패 - 사용자: {} (memCode: {}), 오류: {}", member.getMemEmail(), member.getMemCode(), e.getMessage());
+            log.error("회원탈퇴 실패 - memCode: {}, 오류: {}", member.getMemCode(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "탈퇴 처리 중 오류가 발생했습니다.", "status", 500));
         }
@@ -177,14 +177,13 @@ public class MemberController {
                 .tokenType("Bearer")
                 .expiresAt(System.currentTimeMillis() + jwtTokenProvider.getAccessTokenValidityInMilliseconds())
                 .build();
-                    
 
-            System.out.println("토큰 갱신 성공 - memberCode: " + memberCode);
-            
+            log.info("토큰 갱신 성공 - memCode: {}", memberCode);
+
             return ResponseEntity.ok().body(response);
-            
+
         } catch (Exception e) {
-            System.err.println("토큰 갱신 실패: " + e.getMessage());
+            log.error("토큰 갱신 실패 - 오류: {}", e.getMessage());
             return ResponseEntity.status(401).body(
                 Map.of("error", "Token refresh failed: " + e.getMessage(), "status", 401)
             );
@@ -228,10 +227,8 @@ public class MemberController {
     // 회원의 잔여 이용권 조회
     @GetMapping("/info/select/ticket")
     public ResponseEntity<String> selectTicket(@AuthenticationPrincipal AuthenticatedMemberDto member){
-        System.out.println("/info/select/ticket 로 요청 들어옴");
-        System.out.println("member : "+member.getMemCode());
+        log.debug("이용권 조회 요청 - memCode: {}", member.getMemCode());
         Long memberCode = member.getMemCode();
-        System.out.println("memberCode : "+memberCode);
         int balance = infoService.getUsageBalance(memberCode);
         int total = infoService.getUsageTotal(memberCode);
     
