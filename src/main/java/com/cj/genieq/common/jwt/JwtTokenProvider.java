@@ -58,14 +58,13 @@ public class JwtTokenProvider {
                 accessTokenValidityInMilliseconds, refreshTokenValidityInMilliseconds);
     }
 
-    // @return JWT 액세스 토큰 생성
-    public String createAccessToken(Long memCode, String memEmail, String role) {
+    // @return JWT 액세스 토큰 생성 (Stateless JWT - 최소 정보만 포함)
+    public String createAccessToken(Long memCode, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject(memCode.toString()) // 토큰 주체 (사용자 ID)
-                .claim("memEmail", memEmail) // GENIE의 필드명 사용
                 .claim("role", role) // 사용자 권한
                 .claim("type", "access") // 토큰 타입
                 .setIssuedAt(now) // 발급 시간

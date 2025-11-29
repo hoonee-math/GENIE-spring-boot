@@ -156,9 +156,10 @@ public class MemberController {
             // DB에서 사용자 정보 조회하여 실제 정보로 토큰 생성
             MemberInfoResponseDto memberInfo = infoService.getMemberInfo(memberCode);
 
-            
+            // 새로운 액세스 토큰 생성 (Stateless - memCode, role만 포함)
             String newAccessToken = jwtTokenProvider.createAccessToken(
-                memberCode, memberInfo.getEmail(), "USER" // 기본 권한으로 설정 or memberInfo.getType()
+                memberCode,
+                "USER" // 기본 권한으로 설정 or memberInfo.getType()
             );
             
             // 5. 로그인과 동일한 구조로 응답 (LoginMemberResponseDto 사용)

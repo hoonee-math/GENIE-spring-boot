@@ -62,7 +62,7 @@ class JwtTokenProviderTest {
     @DisplayName("액세스 토큰 생성 테스트")
     void testCreateAccessToken() {
         // When
-        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_MEM_EMAIL, TEST_ROLE);
+        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_ROLE);
         
         // Then
         assertNotNull(accessToken, "액세스 토큰이 null이면 안됩니다");
@@ -90,7 +90,7 @@ class JwtTokenProviderTest {
     @DisplayName("토큰 검증 테스트 - 유효한 토큰")
     void testValidateToken_ValidToken() {
         // Given
-        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_MEM_EMAIL, TEST_ROLE);
+        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_ROLE);
         
         // When
         boolean isValid = jwtTokenProvider.validateToken(accessToken);
@@ -116,7 +116,7 @@ class JwtTokenProviderTest {
     @DisplayName("토큰에서 사용자 ID 추출 테스트")
     void testGetMemberIdFromToken() {
         // Given
-        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_MEM_EMAIL, TEST_ROLE);
+        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_ROLE);
         
         // When
         Long extractedMemCode = jwtTokenProvider.getMemberIdFromToken(accessToken);
@@ -126,23 +126,10 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("토큰에서 이메일 추출 테스트")
-    void testGetEmailFromToken() {
-        // Given
-        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_MEM_EMAIL, TEST_ROLE);
-        
-        // When
-        String extractedEmail = jwtTokenProvider.getEmailFromToken(accessToken);
-        
-        // Then
-        assertEquals(TEST_MEM_EMAIL, extractedEmail, "토큰에서 추출한 이메일이 일치해야 합니다");
-    }
-
-    @Test
     @DisplayName("토큰에서 권한 추출 테스트")
     void testGetRoleFromToken() {
         // Given
-        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_MEM_EMAIL, TEST_ROLE);
+        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_ROLE);
         
         // When
         String extractedRole = jwtTokenProvider.getRoleFromToken(accessToken);
@@ -155,7 +142,7 @@ class JwtTokenProviderTest {
     @DisplayName("토큰 만료 시간 확인 테스트")
     void testGetExpirationDateFromToken() {
         // Given
-        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_MEM_EMAIL, TEST_ROLE);
+        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_ROLE);
         
         // When
         var expirationDate = jwtTokenProvider.getExpirationDateFromToken(accessToken);
@@ -169,7 +156,7 @@ class JwtTokenProviderTest {
     @DisplayName("토큰 만료 여부 확인 테스트")
     void testIsTokenExpired() {
         // Given
-        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_MEM_EMAIL, TEST_ROLE);
+        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_ROLE);
         
         // When
         boolean isExpired = jwtTokenProvider.isTokenExpired(accessToken);
@@ -182,7 +169,7 @@ class JwtTokenProviderTest {
     @DisplayName("토큰 타입 확인 테스트")
     void testGetTokenType() {
         // Given
-        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_MEM_EMAIL, TEST_ROLE);
+        String accessToken = jwtTokenProvider.createAccessToken(TEST_MEM_CODE, TEST_ROLE);
         String refreshToken = jwtTokenProvider.createRefreshToken(TEST_MEM_CODE);
         
         // When
@@ -203,7 +190,7 @@ class JwtTokenProviderTest {
         String role = "ROLE_ADMIN";
         
         // When - 토큰 생성
-        String accessToken = jwtTokenProvider.createAccessToken(memCode, memEmail, role);
+        String accessToken = jwtTokenProvider.createAccessToken(memCode, role);
         String refreshToken = jwtTokenProvider.createRefreshToken(memCode);
         
         // Then - 토큰 검증
@@ -212,7 +199,6 @@ class JwtTokenProviderTest {
         
         // 토큰에서 정보 추출 및 검증
         assertEquals(memCode, jwtTokenProvider.getMemberIdFromToken(accessToken));
-        assertEquals(memEmail, jwtTokenProvider.getEmailFromToken(accessToken));
         assertEquals(role, jwtTokenProvider.getRoleFromToken(accessToken));
         assertEquals(memCode, jwtTokenProvider.getMemberIdFromToken(refreshToken));
         

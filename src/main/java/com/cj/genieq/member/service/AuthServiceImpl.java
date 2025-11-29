@@ -82,10 +82,9 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
     
-        // JWT 토큰 생성
+        // JWT 토큰 생성 (Stateless - memCode, role만 포함)
         String accessToken = jwtTokenProvider.createAccessToken(
-            member.getMemCode(), 
-            member.getMemEmail(), 
+            member.getMemCode(),
             member.getRole() != null ? member.getRole() : "ROLE_USER"
         );
         
