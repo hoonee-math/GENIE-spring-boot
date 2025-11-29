@@ -2,6 +2,12 @@
 
 Spring Boot 백엔드 프로젝트입니다.
 
+GENIE 는 GenieQ 를 리팩토링하여 개발된 서비스입니다.
+
+GenieQ 서비스는 다음 repo에서 확인하실 수 있습니다: 
+- [GenieQ OverView](https://github.com/ChunJae-Full-Stack-FinalProject/GenieQ-overview)
+- [GenieQ github repo 바로가기](https://github.com/ChunJae-Full-Stack-FinalProject/2nd_GenieQ_BackEnd)
+
 ## 🛠️ 사용된 기술 스택
 
 -   **Framework**: Spring Boot
@@ -12,6 +18,10 @@ Spring Boot 백엔드 프로젝트입니다.
 -   **ORM**: JPA/Hibernate
 -   **API Documentation**: Swagger
 -   **Payment**: Toss Payments
+
+## GENIE 아키텍처
+
+![GENIE-아키텍처.webp](docs/GENIE-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.webp)
 
 ## 🚀 설치 및 실행 방법
 
